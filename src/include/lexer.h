@@ -11,6 +11,7 @@ typedef enum
     TOKEN_LPAREN,
     TOKEN_RPAREN,
     TOKEN_EOF,
+    TOKEN_BAD,
 } TokenType;
 
 typedef union
@@ -24,13 +25,15 @@ typedef struct token
 {
     TokenType type;
     TokenValue value;
+    char *symbol;
     struct token *next;
 } Token;
 
-void append_token(Token **head, TokenType token_type, TokenValue value);
+void append_token(Token **head, TokenType token_type, TokenValue value,
+                  char *symbol);
 void free_tokens(Token *head);
 void print_tokens(Token *tokens);
 void handle_number(const char *source, int *cursor, Token **head);
-void handle_plus(const char *source, int *cursor, Token **head);
+void handle_plus(int *cursor, Token **head);
 Token *tokenize(const char *source);
 #endif

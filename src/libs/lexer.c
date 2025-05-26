@@ -1,16 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include "lexer.h"
 
-void append_token(Token **head, TokenType token_type, TokenValue value)
+void append_token(Token **head, TokenType token_type, TokenValue value,
+                  char *symbol)
 {
     Token *new_token = malloc(sizeof(Token));
     if (!new_token)
         return;
-
     new_token->type = token_type;
     new_token->value = value;
+    new_token->symbol = symbol ? strdup(symbol) : NULL;
     new_token->next = NULL;
 
     if (*head == NULL)
@@ -32,7 +34,8 @@ void free_tokens(Token *head)
     while (current != NULL)
     {
         Token *next = current->next;
-
+        if (current->symbol)
+            free(current->symbol);
         free(current);
         current = next;
     }
@@ -52,9 +55,13 @@ void print_tokens(Token *tokens)
         {
             printf("TOKEN [PLUS] -> +\n");
         }
+        else if (tmp->type == TOKEN_BAD)
+        {
+            printf("Undefined Token -> %s\n", tmp->symbol);
+        }
         else
         {
-            printf("Undefined Token\n");
+            printf("Unexpected Error!!\n");
         }
 
         tmp = tmp->next;
@@ -70,13 +77,16 @@ void handle_number(const char *source, int *cursor, Token **head)
         value.int_val = value.int_val * 10 + (source[*cursor] - '0');
         (*cursor)++;
     }
-    append_token(head, TOKEN_NUMBER, value);
+
+    char symbol[32];
+    sprintf(symbol, "%d", value.int_val);
+    append_token(head, TOKEN_NUMBER, value, symbol);
 }
 
-void handle_plus(const char *source, int *cursor, Token **head)
+void handle_plus(int *cursor, Token **head)
 {
     (*cursor)++;
-    append_token(head, TOKEN_PLUS, (TokenValue){0});
+    append_token(head, TOKEN_PLUS, (TokenValue){0}, "+\0");
 }
 
 Token *tokenize(const char *source)
@@ -92,11 +102,12 @@ Token *tokenize(const char *source)
             handle_number(source, &cursor, &head);
         else if (current_char == '+')
         {
-            handle_plus(source, &cursor, &head);
+            handle_plus(&cursor, &head);
         }
 
         else
         {
+            append_token(&head, TOKEN_BAD, (TokenValue){0}, &current_char);
             cursor++;
         }
     }
