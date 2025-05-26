@@ -1,0 +1,35 @@
+#ifndef LEXER_H
+#define LEXER_H
+
+typedef enum
+{
+    TOKEN_NUMBER,
+    TOKEN_IDENTIFIER,
+    TOKEN_PLUS,
+    TOKEN_MINUS,
+    TOKEN_ASSIGN,
+    TOKEN_LPAREN,
+    TOKEN_RPAREN,
+    TOKEN_EOF,
+} TokenType;
+
+typedef union
+{
+    int int_val;
+    double float_val;
+    char *text_val;
+} TokenValue;
+
+typedef struct token
+{
+    TokenType type;
+    TokenValue value;
+    struct token *next;
+} Token;
+
+void append_token(Token **head, TokenType token_type, TokenValue value);
+void free_tokens(Token *head);
+void print_tokens(Token *tokens);
+void handle_number(const char *source, int *cursor, Token **head);
+Token *tokenize(const char *source);
+#endif
