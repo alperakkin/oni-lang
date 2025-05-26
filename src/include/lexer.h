@@ -31,5 +31,6 @@ void append_token(Token **head, TokenType token_type, TokenValue value);
 void free_tokens(Token *head);
 void print_tokens(Token *tokens);
 void handle_number(const char *source, int *cursor, Token **head);
+void handle_plus(const char *source, int *cursor, Token **head);
 Token *tokenize(const char *source);
 #endif

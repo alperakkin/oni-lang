@@ -46,12 +46,17 @@ void print_tokens(Token *tokens)
         if (tmp->type == TOKEN_NUMBER)
         {
 
-            printf("NUMBER -> %d\n", tmp->value.int_val);
+            printf("TOKEN [NUMBER] -> %d\n", tmp->value.int_val);
+        }
+        else if (tmp->type == TOKEN_PLUS)
+        {
+            printf("TOKEN [PLUS] -> +\n");
         }
         else
         {
-            printf("TYPE %d (not number)\n", tmp->type);
+            printf("Undefined Token\n");
         }
+
         tmp = tmp->next;
     }
 }
@@ -68,6 +73,12 @@ void handle_number(const char *source, int *cursor, Token **head)
     append_token(head, TOKEN_NUMBER, value);
 }
 
+void handle_plus(const char *source, int *cursor, Token **head)
+{
+    (*cursor)++;
+    append_token(head, TOKEN_PLUS, (TokenValue){0});
+}
+
 Token *tokenize(const char *source)
 {
     Token *head = NULL;
@@ -76,8 +87,14 @@ Token *tokenize(const char *source)
     while (source[cursor] != '\0')
     {
         char current_char = source[cursor];
+
         if (isdigit(current_char))
             handle_number(source, &cursor, &head);
+        else if (current_char == '+')
+        {
+            handle_plus(source, &cursor, &head);
+        }
+
         else
         {
             cursor++;
