@@ -2,6 +2,7 @@
 typedef enum
 {
     VALUE_INT,
+    VALUE_NONE
 } ValueType;
 
 typedef struct

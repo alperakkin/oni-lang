@@ -5,16 +5,19 @@
 
 Value eval(Node *node)
 {
+    Value result;
+    result.type = VALUE_NONE;
+
     if (node == NULL)
         raise_error("There is known eval node", "");
     switch (node->type)
     {
     case NODE_INTEGER:
     {
-        Value v;
-        v.type = VALUE_INT;
-        v.int_val = node->integer.value;
-        return v;
+
+        result.type = VALUE_INT;
+        result.int_val = node->integer.value;
+        return result;
     }
     case NODE_BINARY_OP:
     {
@@ -23,7 +26,6 @@ Value eval(Node *node)
 
         if (left.type == VALUE_INT && right.type == VALUE_INT)
         {
-            Value result;
             result.type = VALUE_INT;
 
             switch (node->binary_op.token->type)
@@ -49,6 +51,7 @@ Value eval(Node *node)
     default:
         raise_error("Error: unsupported node type", "");
     }
+    return result;
 }
 
 void print_value(Value v)

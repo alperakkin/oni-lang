@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 #include "lexer.h"
@@ -63,6 +64,14 @@ void print_tokens(Token *tokens)
         {
             printf("TOKEN [SPACE] -> %s\n", tmp->symbol);
         }
+        else if (tmp->type == TOKEN_IDENTIFIER)
+        {
+            printf("TOKEN [IDENTIFIER] -> %s\n", tmp->symbol);
+        }
+        else if (tmp->type == TOKEN_FUNCTION_CALL)
+        {
+            printf("TOKEN [FUNCTION] -> %s\n", tmp->symbol);
+        }
         else
         {
             printf("Unexpected Error!!\n");
@@ -93,6 +102,30 @@ void handle_plus(int *cursor, Token **head)
     append_token(head, TOKEN_PLUS, (TokenValue){0}, "+\0");
 }
 
+void handle_identifier(const char *source, int *cursor, Token **head)
+{
+    int start = *cursor;
+
+    while (isalpha(source[*cursor]))
+    {
+
+        (*cursor)++;
+    }
+    int len = *cursor - start;
+    char *name = strndup(&source[start], len);
+
+    TokenValue val = {0};
+    val.identifier = name;
+
+    append_token(head, TOKEN_IDENTIFIER, val, name);
+}
+
+bool is_function(const char *source, int *cursor)
+{
+    if (source[*cursor] == '-' && source[*cursor + 1] == '>')
+        return true;
+    return false;
+}
 Token *tokenize(const char *source)
 {
     Token *head = NULL;
@@ -113,7 +146,13 @@ Token *tokenize(const char *source)
             append_token(&head, TOKEN_SPACE, (TokenValue){0}, &current_char);
             cursor++;
         }
-
+        else if (isalpha(current_char))
+            handle_identifier(source, &cursor, &head);
+        else if (is_function(source, &cursor))
+        {
+            append_token(&head, TOKEN_FUNCTION_CALL, (TokenValue){0}, "->");
+            cursor += 2;
+        }
         else
         {
             append_token(&head, TOKEN_BAD, (TokenValue){0}, &current_char);
