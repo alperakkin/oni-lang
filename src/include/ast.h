@@ -31,9 +31,6 @@ typedef struct
     Token *current;
 } Parser;
 
-static Token *advance(Parser *parser);
-static Node *parse_integer(Parser *parser);
-static Node *parse_primary(Parser *parser);
 Node *parse_expression(Parser *parser);
 Node *parse(Parser *parser);
 void free_node(Node *node);

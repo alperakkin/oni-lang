@@ -3,6 +3,9 @@
 #include "ast.h"
 #include "utils.h"
 
+static Token *advance(Parser *parser);
+static Node *parse_primary(Parser *parser);
+
 static Token *advance(Parser *parser)
 {
     if (parser->current != NULL)
@@ -14,15 +17,6 @@ static Token *advance(Parser *parser)
     }
 
     return parser->current;
-}
-
-static Node *parse_integer(Parser *parser)
-{
-    Token *token = advance(parser);
-    Node *node = malloc(sizeof(Node));
-    node->type = NODE_INTEGER;
-    node->integer.value = token->value.int_val;
-    return node;
 }
 
 Node *parse_primary(Parser *parser)
