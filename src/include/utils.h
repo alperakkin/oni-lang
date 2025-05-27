@@ -1,0 +1,1 @@
+void raise_error(char *msg, char* symbol);

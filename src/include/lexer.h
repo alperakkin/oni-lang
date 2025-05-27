@@ -3,7 +3,7 @@
 
 typedef enum
 {
-    TOKEN_NUMBER,
+    TOKEN_INTEGER,
     TOKEN_IDENTIFIER,
     TOKEN_PLUS,
     TOKEN_MINUS,
@@ -12,6 +12,7 @@ typedef enum
     TOKEN_RPAREN,
     TOKEN_EOF,
     TOKEN_BAD,
+    TOKEN_SPACE,
 } TokenType;
 
 typedef union
@@ -21,12 +22,12 @@ typedef union
     char *text_val;
 } TokenValue;
 
-typedef struct token
+typedef struct Token
 {
     TokenType type;
     TokenValue value;
     char *symbol;
-    struct token *next;
+    struct Token *next;
 } Token;
 
 void append_token(Token **head, TokenType token_type, TokenValue value,
