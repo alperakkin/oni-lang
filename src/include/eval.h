@@ -1,18 +1,6 @@
+#pragma once
 #include "ast.h"
-typedef enum
-{
-    VALUE_INT,
-    VALUE_NONE
-} ValueType;
-
-typedef struct
-{
-    ValueType type;
-    union
-    {
-        int int_val;
-    };
-} Value;
+#include "value.h"
 
 Value eval(Node *node);
 void print_value(Value v);

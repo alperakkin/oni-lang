@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "eval.h"
+#include "value.h"
 #include "utils.h"
+#include "builtins.h"
 
 Value eval(Node *node)
 {
@@ -47,8 +49,22 @@ Value eval(Node *node)
             raise_error("Error: unsupported operand type", "");
         }
     }
-
+    case NODE_FUNCTION_CALL:
+    {
+        Value left = eval(node->func_call.left);
+        Value right = eval(node->func_call.right);
+        BuiltinFunction *fn = find_builtin(left.str_val);
+        if (!fn)
+            raise_error("Error: function not found", left.str_val);
+        return fn->func(&right, 1);
+    }
+    case NODE_IDENTIFIER:
+    {
+        result.str_val = node->identifier.value;
+        return result;
+    }
     default:
+        printf("Node Type %d\n", node->type);
         raise_error("Error: unsupported node type", "");
     }
     return result;
@@ -61,7 +77,12 @@ void print_value(Value v)
     case VALUE_INT:
         printf("%d\n", v.int_val);
         break;
-
+    case VALUE_NONE:
+        printf("\n");
+        break;
+    case VALUE_STRING:
+        printf("%d\n", v.int_val);
+        break;
     default:
         printf("<unknown value>\n");
     }

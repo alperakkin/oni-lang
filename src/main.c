@@ -10,13 +10,13 @@ int main(int argc, char **argv)
         raise_error("Please provide a filename", "");
     const char *source = read_file(argv[1]);
     Token *tokens = tokenize(source);
-    print_tokens(tokens);
+    // print_tokens(tokens);
     Parser parser;
     parser.current = tokens;
     Node *ast = parse(&parser);
-    print_ast(ast, 0);
+    // print_ast(ast, 0);
 
-    // Value result = eval(ast);
+    Value result = eval(ast);
     // print_value(result);
 
     free_tokens(tokens);
