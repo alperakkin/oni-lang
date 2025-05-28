@@ -13,11 +13,13 @@ int main(int argc, char **argv)
     // print_tokens(tokens);
     Parser parser;
     parser.current = tokens;
-    Node *ast = parse(&parser);
+    NodeBlock *ast = parse(&parser);
     // print_ast(ast, 0);
-
-    Value result = eval(ast);
-    // print_value(result);
+    for (int i = 0; i < ast->count; i++)
+    {
+        Value result = eval(ast->statements[i]);
+        // print_value(result);
+    }
 
     free_tokens(tokens);
     free_node(ast);

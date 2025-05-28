@@ -16,6 +16,7 @@ typedef enum
     TOKEN_SPACE,
     TOKEN_FUNCTION_CALL,
     TOKEN_COMMA,
+    TOKEN_NEW_LINE,
 } TokenType;
 
 typedef union

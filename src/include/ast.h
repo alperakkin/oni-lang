@@ -57,7 +57,8 @@ typedef struct
 } Parser;
 
 Node *parse_expression(Parser *parser);
-Node *parse(Parser *parser);
+NodeBlock *parse(Parser *parser);
 Node *parse_function_call(Parser *parser, Token *identifier_token);
 void free_node(Node *node);
 void print_ast(Node *node, int level);
+void print_ast_block(NodeBlock *block);

@@ -72,6 +72,10 @@ void print_tokens(Token *tokens)
         {
             printf("TOKEN [FUNCTION] -> %s\n", tmp->symbol);
         }
+        else if (tmp->type == TOKEN_NEW_LINE)
+        {
+            printf("TOKEN [NEW LINE] -> %s\n", tmp->symbol);
+        }
         else
         {
             printf("Unexpected Error!!\n");
@@ -144,6 +148,11 @@ Token *tokenize(const char *source)
         else if (current_char == ' ')
         {
             append_token(&head, TOKEN_SPACE, (TokenValue){0}, &current_char);
+            cursor++;
+        }
+        else if (current_char == '\n')
+        {
+            append_token(&head, TOKEN_NEW_LINE, (TokenValue){0}, &current_char);
             cursor++;
         }
         else if (isalpha(current_char))

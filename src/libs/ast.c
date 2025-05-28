@@ -11,7 +11,7 @@ static Token *advance(Parser *parser)
     if (parser->current != NULL)
         parser->current = parser->current->next;
 
-    while (parser->current != NULL && parser->current->type == TOKEN_SPACE)
+    while (parser->current != NULL && (parser->current->type == TOKEN_SPACE || parser->current->type == TOKEN_NEW_LINE))
     {
         parser->current = parser->current->next;
     }
@@ -119,10 +119,24 @@ Node *parse_function_call(Parser *parser, Token *identifier_token)
     return func_call;
 }
 
-Node *parse(Parser *parser)
+NodeBlock *parse(Parser *parser)
 {
+    NodeBlock *block = malloc(sizeof(NodeBlock));
+    block->statements = NULL;
+    block->count = 0;
 
-    return parse_expression(parser);
+    while (parser->current != NULL)
+    {
+        Node *stmt = parse_expression(parser); // veya parse_statement(parser)
+        if (stmt != NULL)
+        {
+            block->count++;
+            block->statements = realloc(block->statements, sizeof(Node *) * block->count);
+            block->statements[block->count - 1] = stmt;
+        }
+    }
+
+    return block;
 }
 
 void free_node(Node *node)
@@ -184,5 +198,13 @@ void print_ast(Node *node, int level)
 
     default:
         printf("Unknown node type\n");
+    }
+}
+
+void print_ast_block(NodeBlock *block)
+{
+    for (int i = 0; i < block->count; i++)
+    {
+        print_ast(block->statements[i], 0);
     }
 }
