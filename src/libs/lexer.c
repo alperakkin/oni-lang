@@ -164,7 +164,10 @@ Token *tokenize(const char *source)
         }
         else
         {
-            append_token(&head, TOKEN_BAD, (TokenValue){0}, &current_char);
+            char symbol[2];
+            symbol[0] = current_char;
+            symbol[1] = '\0';
+            append_token(&head, TOKEN_BAD, (TokenValue){0}, symbol);
             cursor++;
         }
     }

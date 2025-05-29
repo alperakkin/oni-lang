@@ -54,6 +54,8 @@ Node *parse_primary(Parser *parser)
 
 Node *parse_expression(Parser *parser)
 {
+    if (parser->current->type == TOKEN_BAD)
+        raise_error("Syntax Error: Bad Token", parser->current->symbol);
     if (parser->current &&
         parser->current->type == TOKEN_IDENTIFIER)
 
@@ -127,7 +129,7 @@ NodeBlock *parse(Parser *parser)
 
     while (parser->current != NULL)
     {
-        Node *stmt = parse_expression(parser); // veya parse_statement(parser)
+        Node *stmt = parse_expression(parser);
         if (stmt != NULL)
         {
             block->count++;

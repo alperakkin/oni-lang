@@ -16,6 +16,7 @@ bool is_oni_file(char *filename)
 }
 void raise_error(char *msg, char *symbol)
 {
+
     fprintf(stderr, "%s -> %s\n", msg, symbol);
     exit(1);
 }
