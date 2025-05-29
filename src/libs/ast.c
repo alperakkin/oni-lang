@@ -74,7 +74,7 @@ Node *parse_expression(Parser *parser)
     {
         Token *token = parser->current;
 
-        if (token->type == TOKEN_PLUS)
+        if (token->type == TOKEN_PLUS || token->type == TOKEN_MINUS)
         {
             advance(parser);
             Node *right = parse_primary(parser);

@@ -105,6 +105,12 @@ void handle_plus(int *cursor, Token **head)
     (*cursor)++;
     append_token(head, TOKEN_PLUS, (TokenValue){0}, "+\0");
 }
+void handle_minus(int *cursor, Token **head)
+{
+
+    (*cursor)++;
+    append_token(head, TOKEN_MINUS, (TokenValue){0}, "-\0");
+}
 
 void handle_identifier(const char *source, int *cursor, Token **head)
 {
@@ -138,12 +144,22 @@ Token *tokenize(const char *source)
     while (source[cursor] != '\0')
     {
         char current_char = source[cursor];
-
-        if (isdigit(current_char))
+        if (isalpha(current_char))
+            handle_identifier(source, &cursor, &head);
+        else if (is_function(source, &cursor))
+        {
+            append_token(&head, TOKEN_FUNCTION_CALL, (TokenValue){0}, "->");
+            cursor += 2;
+        }
+        else if (isdigit(current_char))
             handle_integer(source, &cursor, &head);
         else if (current_char == '+')
         {
             handle_plus(&cursor, &head);
+        }
+        else if (current_char == '-')
+        {
+            handle_minus(&cursor, &head);
         }
         else if (current_char == ' ')
         {
@@ -155,13 +171,7 @@ Token *tokenize(const char *source)
             append_token(&head, TOKEN_NEW_LINE, (TokenValue){0}, &current_char);
             cursor++;
         }
-        else if (isalpha(current_char))
-            handle_identifier(source, &cursor, &head);
-        else if (is_function(source, &cursor))
-        {
-            append_token(&head, TOKEN_FUNCTION_CALL, (TokenValue){0}, "->");
-            cursor += 2;
-        }
+
         else
         {
             char symbol[2];
