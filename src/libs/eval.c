@@ -38,7 +38,9 @@ Value eval(Node *node)
             case TOKEN_MINUS:
                 result.int_val = left.int_val - right.int_val;
                 break;
-
+            case TOKEN_STAR:
+                result.int_val = left.int_val * right.int_val;
+                break;
             default:
                 raise_error("Error: unknown binary operator", "");
             }

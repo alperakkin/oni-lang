@@ -6,6 +6,21 @@
 static Token *advance(Parser *parser);
 static Node *parse_primary(Parser *parser);
 
+int get_precedence(TokenType type)
+{
+    switch (type)
+    {
+    case TOKEN_PLUS:
+    case TOKEN_MINUS:
+        return 1;
+    case TOKEN_STAR:
+    case TOKEN_SLASH:
+        return 2;
+    default:
+        return 0;
+    }
+}
+
 static Token *advance(Parser *parser)
 {
     if (parser->current != NULL)
@@ -24,8 +39,21 @@ Node *parse_primary(Parser *parser)
     Token *token = parser->current;
 
     if (token == NULL)
-    {
         raise_error("No token found", "");
+
+    if (token->type == TOKEN_L_PAREN)
+    {
+        advance(parser);
+        if (parser->current == NULL)
+            raise_error("Expected expression after '('", token->symbol);
+
+        Node *expr = parse_expression(parser, 0);
+
+        if (parser->current == NULL || parser->current->type != TOKEN_R_PAREN)
+            raise_error("Expected closing parenthesis", token->symbol);
+
+        advance(parser);
+        return expr;
     }
 
     if (token->type == TOKEN_INTEGER)
@@ -40,57 +68,61 @@ Node *parse_primary(Parser *parser)
 
     if (token->type == TOKEN_IDENTIFIER)
     {
-        Node *node = malloc(sizeof(Node));
-        node->type = NODE_IDENTIFIER;
-        node->identifier.value = token->value.identifier;
+        Token *identifier_token = token;
+        Token *next = token->next;
+        while (next && (next->type == TOKEN_SPACE || next->type == TOKEN_NEW_LINE))
+            next = next->next;
+
+        if (next && next->type == TOKEN_FUNCTION_CALL)
+        {
+            return parse_function_call(parser, identifier_token);
+        }
 
         advance(parser);
+        Node *node = malloc(sizeof(Node));
+        node->type = NODE_IDENTIFIER;
+        node->identifier.value = identifier_token->value.identifier;
         return node;
     }
 
-    raise_error("Unexpected token type", token->symbol);
+    char symbol[2];
+    symbol[0] = *token->symbol;
+    symbol[1] = '\0';
+
+    raise_error("Unexpected token type", symbol);
     return NULL;
 }
 
-Node *parse_expression(Parser *parser)
+Node *parse_expression(Parser *parser, int min_precedence)
 {
+    if (parser->current == NULL)
+        raise_error("Unexpected end of expression", "");
     if (parser->current->type == TOKEN_BAD)
-        raise_error("Syntax Error: Bad Token", parser->current->symbol);
-    if (parser->current &&
-        parser->current->type == TOKEN_IDENTIFIER)
-
     {
-        Token *identifier_token = parser->current;
-        advance(parser);
-        if (parser->current->type == TOKEN_FUNCTION_CALL)
-            return parse_function_call(parser, identifier_token);
-        else
-            raise_error("Not Implemented", "Parser Identifier");
+        raise_error("Syntax Error: Bad Token", parser->current->symbol);
     }
-
+    print_token(parser->current);
     Node *left = parse_primary(parser);
 
     while (parser->current != NULL)
     {
         Token *token = parser->current;
-
-        if (token->type == TOKEN_PLUS || token->type == TOKEN_MINUS)
-        {
-            advance(parser);
-            Node *right = parse_primary(parser);
-
-            Node *bin_op = malloc(sizeof(Node));
-            bin_op->type = NODE_BINARY_OP;
-            bin_op->binary_op.left = left;
-            bin_op->binary_op.right = right;
-            bin_op->binary_op.token = token;
-
-            left = bin_op;
-        }
-        else
-        {
+        if (token->type == TOKEN_R_PAREN)
             break;
-        }
+        int precedence = get_precedence(token->type);
+        if (precedence < min_precedence)
+            break;
+
+        advance(parser);
+        Node *right = parse_expression(parser, precedence + 1);
+
+        Node *bin_op = malloc(sizeof(Node));
+        bin_op->type = NODE_BINARY_OP;
+        bin_op->binary_op.left = left;
+        bin_op->binary_op.right = right;
+        bin_op->binary_op.token = token;
+
+        left = bin_op;
     }
 
     return left;
@@ -98,15 +130,16 @@ Node *parse_expression(Parser *parser)
 
 Node *parse_function_call(Parser *parser, Token *identifier_token)
 {
-
+    advance(parser);
     Token *arrow_token = parser->current;
+
     if (arrow_token->type != TOKEN_FUNCTION_CALL)
     {
         raise_error("Expected ->", arrow_token->symbol);
     }
-    advance(parser);
 
-    Node *arg_node = parse_expression(parser);
+    advance(parser);
+    Node *arg_node = parse_expression(parser, 0);
 
     Node *identifier_node = malloc(sizeof(Node));
     identifier_node->type = NODE_IDENTIFIER;
@@ -129,12 +162,18 @@ NodeBlock *parse(Parser *parser)
 
     while (parser->current != NULL)
     {
-        Node *stmt = parse_expression(parser);
+
+        Node *stmt = parse_expression(parser, 0);
         if (stmt != NULL)
         {
             block->count++;
             block->statements = realloc(block->statements, sizeof(Node *) * block->count);
             block->statements[block->count - 1] = stmt;
+        }
+
+        while (parser->current != NULL && parser->current->type == TOKEN_NEW_LINE)
+        {
+            advance(parser);
         }
     }
 
@@ -184,8 +223,9 @@ void print_ast(Node *node, int level)
         break;
 
     case NODE_BINARY_OP:
+
         printf("BinaryOp: %s\n",
-               node->binary_op.token->type == TOKEN_PLUS ? "+" : "UnknownOp");
+               node->binary_op.token->symbol);
 
         print_ast(node->binary_op.left, level + 1);
         print_ast(node->binary_op.right, level + 1);

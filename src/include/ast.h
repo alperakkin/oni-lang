@@ -56,7 +56,7 @@ typedef struct
     Token *current;
 } Parser;
 
-Node *parse_expression(Parser *parser);
+Node *parse_expression(Parser *parser, int min_precedence);
 NodeBlock *parse(Parser *parser);
 Node *parse_function_call(Parser *parser, Token *identifier_token);
 void free_node(Node *node);

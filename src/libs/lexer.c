@@ -42,45 +42,69 @@ void free_tokens(Token *head)
     }
 }
 
+void print_token(Token *token)
+{
+    char symbol[2];
+    symbol[0] = *token->symbol;
+    symbol[1] = '\0';
+    if (token->type == TOKEN_INTEGER)
+    {
+
+        printf("TOKEN [INTEGER] -> %d\n", token->value.int_val);
+    }
+    else if (token->type == TOKEN_PLUS)
+    {
+        printf("TOKEN [PLUS] -> +\n");
+    }
+    else if (token->type == TOKEN_MINUS)
+    {
+        printf("TOKEN [MINUS] -> -\n");
+    }
+    else if (token->type == TOKEN_STAR)
+    {
+        printf("TOKEN [STAR] -> *\n");
+    }
+    else if (token->type == TOKEN_L_PAREN)
+    {
+        printf("TOKEN [LEFT PARANTHESIS] -> (\n");
+    }
+    else if (token->type == TOKEN_R_PAREN)
+    {
+        printf("TOKEN [RIGHT PARANTHESIS] -> )\n");
+    }
+    else if (token->type == TOKEN_BAD)
+    {
+        printf("Undefined Token -> %s\n", symbol);
+    }
+    else if (token->type == TOKEN_SPACE)
+    {
+
+        printf("TOKEN [SPACE] -> %s\n", symbol);
+    }
+    else if (token->type == TOKEN_IDENTIFIER)
+    {
+        printf("TOKEN [IDENTIFIER] -> %s\n", token->symbol);
+    }
+    else if (token->type == TOKEN_FUNCTION_CALL)
+    {
+        printf("TOKEN [FUNCTION] -> %s\n", symbol);
+    }
+    else if (token->type == TOKEN_NEW_LINE)
+    {
+        printf("TOKEN [NEW LINE] -> %s\n", symbol);
+    }
+    else
+    {
+        printf("Unexpected TOKEN!!\n");
+    }
+}
+
 void print_tokens(Token *tokens)
 {
     Token *tmp = tokens;
     while (tmp != NULL)
     {
-        if (tmp->type == TOKEN_INTEGER)
-        {
-
-            printf("TOKEN [INTEGER] -> %d\n", tmp->value.int_val);
-        }
-        else if (tmp->type == TOKEN_PLUS)
-        {
-            printf("TOKEN [PLUS] -> +\n");
-        }
-        else if (tmp->type == TOKEN_BAD)
-        {
-            printf("Undefined Token -> %s\n", tmp->symbol);
-        }
-        else if (tmp->type == TOKEN_SPACE)
-        {
-            printf("TOKEN [SPACE] -> %s\n", tmp->symbol);
-        }
-        else if (tmp->type == TOKEN_IDENTIFIER)
-        {
-            printf("TOKEN [IDENTIFIER] -> %s\n", tmp->symbol);
-        }
-        else if (tmp->type == TOKEN_FUNCTION_CALL)
-        {
-            printf("TOKEN [FUNCTION] -> %s\n", tmp->symbol);
-        }
-        else if (tmp->type == TOKEN_NEW_LINE)
-        {
-            printf("TOKEN [NEW LINE] -> %s\n", tmp->symbol);
-        }
-        else
-        {
-            printf("Unexpected Error!!\n");
-        }
-
+        print_token(tmp);
         tmp = tmp->next;
     }
 }
@@ -110,6 +134,11 @@ void handle_minus(int *cursor, Token **head)
 
     (*cursor)++;
     append_token(head, TOKEN_MINUS, (TokenValue){0}, "-\0");
+}
+void handle_star(int *cursor, Token **head)
+{
+    (*cursor)++;
+    append_token(head, TOKEN_STAR, (TokenValue){0}, "*\0");
 }
 
 void handle_identifier(const char *source, int *cursor, Token **head)
@@ -161,6 +190,10 @@ Token *tokenize(const char *source)
         {
             handle_minus(&cursor, &head);
         }
+        else if (current_char == '*')
+        {
+            handle_star(&cursor, &head);
+        }
         else if (current_char == ' ')
         {
             append_token(&head, TOKEN_SPACE, (TokenValue){0}, &current_char);
@@ -169,6 +202,16 @@ Token *tokenize(const char *source)
         else if (current_char == '\n')
         {
             append_token(&head, TOKEN_NEW_LINE, (TokenValue){0}, &current_char);
+            cursor++;
+        }
+        else if (current_char == '(')
+        {
+            append_token(&head, TOKEN_L_PAREN, (TokenValue){0}, &current_char);
+            cursor++;
+        }
+        else if (current_char == ')')
+        {
+            append_token(&head, TOKEN_R_PAREN, (TokenValue){0}, &current_char);
             cursor++;
         }
 

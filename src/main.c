@@ -14,7 +14,7 @@ int main(int argc, char **argv)
     Parser parser;
     parser.current = tokens;
     NodeBlock *ast = parse(&parser);
-    // print_ast(ast, 0);
+    print_ast_block(ast);
     for (int i = 0; i < ast->count; i++)
     {
         Value result = eval(ast->statements[i]);

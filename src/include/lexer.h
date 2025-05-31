@@ -8,8 +8,9 @@ typedef enum
     TOKEN_IDENTIFIER,
     TOKEN_PLUS,
     TOKEN_MINUS,
+    TOKEN_STAR,
+    TOKEN_SLASH,
     TOKEN_ASSIGN,
-    TOKEN_LPAREN,
     TOKEN_RPAREN,
     TOKEN_EOF,
     TOKEN_BAD,
@@ -17,6 +18,8 @@ typedef enum
     TOKEN_FUNCTION_CALL,
     TOKEN_COMMA,
     TOKEN_NEW_LINE,
+    TOKEN_L_PAREN,
+    TOKEN_R_PAREN,
 } TokenType;
 
 typedef union
@@ -39,6 +42,7 @@ bool is_function(const char *source, int *cursor);
 void append_token(Token **head, TokenType token_type, TokenValue value,
                   char *symbol);
 void free_tokens(Token *head);
+void print_token(Token *token);
 void print_tokens(Token *tokens);
 void handle_number(const char *source, int *cursor, Token **head);
 void handle_plus(int *cursor, Token **head);
