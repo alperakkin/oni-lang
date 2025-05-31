@@ -26,7 +26,7 @@ static Token *advance(Parser *parser)
     if (parser->current != NULL)
         parser->current = parser->current->next;
 
-    while (parser->current != NULL && (parser->current->type == TOKEN_SPACE || parser->current->type == TOKEN_NEW_LINE))
+    while (parser->current != NULL && (parser->current->type == TOKEN_SPACE))
     {
         parser->current = parser->current->next;
     }
@@ -106,7 +106,12 @@ Node *parse_expression(Parser *parser, int min_precedence)
 
     while (parser->current != NULL)
     {
+
         Token *token = parser->current;
+
+        if (token->type == TOKEN_NEW_LINE || token->type == TOKEN_EOF)
+            break;
+
         if (token->type == TOKEN_R_PAREN)
             break;
         int precedence = get_precedence(token->type);
@@ -131,15 +136,30 @@ Node *parse_expression(Parser *parser, int min_precedence)
 Node *parse_function_call(Parser *parser, Token *identifier_token)
 {
     advance(parser);
-    Token *arrow_token = parser->current;
 
-    if (arrow_token->type != TOKEN_FUNCTION_CALL)
+    Token *arrow_token = parser->current;
+    if (arrow_token == NULL || arrow_token->type != TOKEN_FUNCTION_CALL)
     {
-        raise_error("Expected ->", arrow_token->symbol);
+        raise_error("Expected '->'", arrow_token ? arrow_token->symbol : "");
     }
 
     advance(parser);
-    Node *arg_node = parse_expression(parser, 0);
+
+    if (parser->current == NULL || parser->current->type != TOKEN_L_PAREN)
+    {
+        raise_error("Expected '(' after ->", parser->current ? parser->current->symbol : "");
+    }
+
+    advance(parser);
+
+    Node *arg_expr = parse_expression(parser, 0);
+
+    if (parser->current == NULL || parser->current->type != TOKEN_R_PAREN)
+    {
+        raise_error("Expected ')' after expression in function call", parser->current ? parser->current->symbol : "");
+    }
+
+    advance(parser);
 
     Node *identifier_node = malloc(sizeof(Node));
     identifier_node->type = NODE_IDENTIFIER;
@@ -148,7 +168,7 @@ Node *parse_function_call(Parser *parser, Token *identifier_token)
     Node *func_call = malloc(sizeof(Node));
     func_call->type = NODE_FUNCTION_CALL;
     func_call->func_call.left = identifier_node;
-    func_call->func_call.right = arg_node;
+    func_call->func_call.right = arg_expr;
     func_call->func_call.token = arrow_token;
 
     return func_call;
@@ -162,7 +182,6 @@ NodeBlock *parse(Parser *parser)
 
     while (parser->current != NULL)
     {
-
         Node *stmt = parse_expression(parser, 0);
         if (stmt != NULL)
         {
