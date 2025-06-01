@@ -60,8 +60,19 @@ Node *parse_primary(Parser *parser)
     if (token->type == TOKEN_INTEGER)
     {
         Node *node = malloc(sizeof(Node));
-        node->type = NODE_INTEGER;
-        node->integer.value = token->value.int_val;
+        node->type = NODE_NUMBER;
+        node->number.int_value = token->value.int_val;
+        node->number.type = NODE_INTEGER;
+
+        advance(parser);
+        return node;
+    }
+    if (token->type == TOKEN_FLOAT)
+    {
+        Node *node = malloc(sizeof(Node));
+        node->type = NODE_NUMBER;
+        node->number.float_value = token->value.float_val;
+        node->number.type = NODE_FLOAT;
 
         advance(parser);
         return node;
@@ -242,8 +253,11 @@ void print_ast(Node *node, int level)
 
     switch (node->type)
     {
-    case NODE_INTEGER:
-        printf("Integer: %d\n", node->integer.value);
+    case NODE_NUMBER:
+        if (node->number.type == NODE_INTEGER)
+            printf("NUMBER (INT): %d\n", node->number.int_value);
+        else if (node->number.type == NODE_FLOAT)
+            printf("NUMBER (FLOAT): %d\n", node->number.float_value);
         break;
 
     case NODE_IDENTIFIER:

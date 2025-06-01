@@ -14,45 +14,82 @@ Value eval(Node *node)
         raise_error("There is unknown eval node", "");
     switch (node->type)
     {
-    case NODE_INTEGER:
+    case NODE_NUMBER:
     {
 
-        result.type = VALUE_INT;
-        result.int_val = node->integer.value;
+        if (node->number.type == NODE_INTEGER)
+        {
+            result.type = VALUE_INT;
+            result.int_val = node->number.int_value;
+        }
+        else if (node->number.type == NODE_FLOAT)
+        {
+            result.type = VALUE_FLOAT;
+            result.float_val = node->number.float_value;
+        }
         return result;
     }
+
     case NODE_BINARY_OP:
     {
         Value left = eval(node->binary_op.left);
         Value right = eval(node->binary_op.right);
+        int is_float = (left.type == VALUE_FLOAT || right.type == VALUE_FLOAT);
 
-        if (left.type == VALUE_INT && right.type == VALUE_INT)
+        if (!is_float)
         {
+
             result.type = VALUE_INT;
+            int l = left.int_val;
+            int r = right.int_val;
 
             switch (node->binary_op.token->type)
             {
             case TOKEN_PLUS:
-                result.int_val = left.int_val + right.int_val;
+                result.int_val = l + r;
                 break;
             case TOKEN_MINUS:
-                result.int_val = left.int_val - right.int_val;
+                result.int_val = l - r;
                 break;
             case TOKEN_STAR:
-                result.int_val = left.int_val * right.int_val;
+                result.int_val = l * r;
                 break;
             case TOKEN_SLASH:
-                result.int_val = left.int_val / right.int_val;
+                result.int_val = l / r;
                 break;
             default:
-                raise_error("Error: unknown binary operator", "");
+                raise_error("Unknown binary operator", "");
             }
-            return result;
+        }
+        else if (is_float)
+        {
+            result.type = VALUE_FLOAT;
+            float l = (left.type == VALUE_INT) ? (float)left.int_val : left.float_val;
+            float r = (right.type == VALUE_INT) ? (float)right.int_val : right.float_val;
+
+            switch (node->binary_op.token->type)
+            {
+            case TOKEN_PLUS:
+                result.float_val = l + r;
+                break;
+            case TOKEN_MINUS:
+                result.float_val = l - r;
+                break;
+            case TOKEN_STAR:
+                result.float_val = l * r;
+                break;
+            case TOKEN_SLASH:
+                result.float_val = l / r;
+                break;
+            default:
+                raise_error("Unknown binary operator", "");
+            }
         }
         else
         {
-            raise_error("Error: unsupported operand type", "");
+            raise_error("Unsupported right operand type", "");
         }
+        return result;
     }
     case NODE_FUNCTION_CALL:
     {

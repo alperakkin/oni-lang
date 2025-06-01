@@ -5,6 +5,8 @@
 typedef enum
 {
     TOKEN_INTEGER,
+    TOKEN_FLOAT,
+    TOKEN_BOOL,
     TOKEN_IDENTIFIER,
     TOKEN_PLUS,
     TOKEN_MINUS,
@@ -27,7 +29,7 @@ typedef enum
 typedef union
 {
     int int_val;
-    double float_val;
+    float float_val;
     char *text_val;
     char *identifier;
 } TokenValue;

@@ -11,7 +11,7 @@ typedef struct
 
 typedef enum
 {
-    NODE_INTEGER,
+    NODE_NUMBER,
     NODE_STRING,
     NODE_BINARY_OP,
     NODE_FUNCTION_CALL,
@@ -19,6 +19,12 @@ typedef enum
     NODE_BLOCK,
 } NodeType;
 
+typedef enum
+{
+    NODE_INTEGER,
+    NODE_FLOAT
+
+} NodeNumberType;
 struct Node
 {
     NodeType type;
@@ -26,8 +32,11 @@ struct Node
     {
         struct
         {
-            int value;
-        } integer;
+            int int_value;
+            float float_value;
+            NodeNumberType type;
+
+        } number;
 
         struct
         {

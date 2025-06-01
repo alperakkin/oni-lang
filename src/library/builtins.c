@@ -14,6 +14,10 @@ Value builtin_print(Value *args, int arg_count)
         {
             printf("%d", args[i].int_val);
         }
+        else if (args[i].type == VALUE_FLOAT)
+        {
+            printf("%f", args[i].float_val);
+        }
         else if (args[i].type == VALUE_STRING)
         {
             printf("%s", args[i].str_val);

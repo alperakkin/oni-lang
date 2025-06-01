@@ -53,6 +53,10 @@ void print_token(Token *token)
 
         printf("TOKEN [INTEGER] -> %d\n", token->value.int_val);
     }
+    else if (token->type == TOKEN_FLOAT)
+    {
+        printf("TOKEN [FLOAT] -> %f\n", token->value.float_val);
+    }
     else if (token->type == TOKEN_PLUS)
     {
         printf("TOKEN [PLUS] -> +\n");
@@ -122,19 +126,42 @@ void print_tokens(Token *tokens)
     }
 }
 
-void handle_integer(const char *source, int *cursor, Token **head)
+void handle_number(const char *source, int *cursor, Token **head)
 {
-    TokenValue value = {.int_val = 0};
+
+    int start = *cursor;
+    int dot_cursor = 0;
 
     while (isdigit(source[*cursor]))
     {
-        value.int_val = value.int_val * 10 + (source[*cursor] - '0');
         (*cursor)++;
     }
+    if (source[*cursor] == '.')
+    {
+        dot_cursor = 1;
+        (*cursor)++;
 
-    char symbol[32];
-    sprintf(symbol, "%d", value.int_val);
-    append_token(head, TOKEN_INTEGER, value, symbol);
+        while (isdigit(source[*cursor]))
+        {
+            (*cursor)++;
+        }
+    }
+    int len = *cursor - start;
+    char *number_str = strndup(&source[start], len);
+
+    if (dot_cursor)
+    {
+        float fval = atof(number_str);
+        TokenValue val = {.float_val = fval};
+        append_token(head, TOKEN_FLOAT, val, number_str);
+    }
+    else
+    {
+        int ival = atoi(number_str);
+        TokenValue val = {.int_val = ival};
+        append_token(head, TOKEN_INTEGER, val, number_str);
+    }
+    free(number_str);
 }
 
 void handle_plus(int *cursor, Token **head)
@@ -225,7 +252,7 @@ Token *tokenize(const char *source)
             cursor += 2;
         }
         else if (isdigit(current_char))
-            handle_integer(source, &cursor, &head);
+            handle_number(source, &cursor, &head);
         else if (current_char == '+')
         {
             handle_plus(&cursor, &head);
