@@ -20,6 +20,8 @@ typedef enum
     TOKEN_NEW_LINE,
     TOKEN_L_PAREN,
     TOKEN_R_PAREN,
+    TOKEN_QUOTE,
+    TOKEN_STRING,
 } TokenType;
 
 typedef union
@@ -46,6 +48,7 @@ void print_token(Token *token);
 void print_tokens(Token *tokens);
 void handle_number(const char *source, int *cursor, Token **head);
 void handle_plus(int *cursor, Token **head);
+void handle_string(const char *source, int *cursor, Token **head);
 void handle_identifier(const char *source, int *cursor, Token **head);
 Token *tokenize(const char *source);
 #endif

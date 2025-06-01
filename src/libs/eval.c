@@ -11,7 +11,7 @@ Value eval(Node *node)
     result.type = VALUE_NONE;
 
     if (node == NULL)
-        raise_error("There is known eval node", "");
+        raise_error("There is unknown eval node", "");
     switch (node->type)
     {
     case NODE_INTEGER:
@@ -41,6 +41,9 @@ Value eval(Node *node)
             case TOKEN_STAR:
                 result.int_val = left.int_val * right.int_val;
                 break;
+            case TOKEN_SLASH:
+                result.int_val = left.int_val / right.int_val;
+                break;
             default:
                 raise_error("Error: unknown binary operator", "");
             }
@@ -63,6 +66,12 @@ Value eval(Node *node)
     case NODE_IDENTIFIER:
     {
         result.str_val = node->identifier.value;
+        return result;
+    }
+    case NODE_STRING:
+    {
+        result.type = VALUE_STRING;
+        result.str_val = node->string.value;
         return result;
     }
     default:

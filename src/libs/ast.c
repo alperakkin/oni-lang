@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "ast.h"
 #include "utils.h"
 
@@ -65,6 +66,14 @@ Node *parse_primary(Parser *parser)
         advance(parser);
         return node;
     }
+    if (token->type == TOKEN_STRING)
+    {
+        advance(parser);
+        Node *node = malloc(sizeof(Node));
+        node->type = NODE_STRING;
+        node->string.value = strdup(token->value.text_val);
+        return node;
+    }
 
     if (token->type == TOKEN_IDENTIFIER)
     {
@@ -101,7 +110,7 @@ Node *parse_expression(Parser *parser, int min_precedence)
     {
         raise_error("Syntax Error: Bad Token", parser->current->symbol);
     }
-    print_token(parser->current);
+
     Node *left = parse_primary(parser);
 
     while (parser->current != NULL)

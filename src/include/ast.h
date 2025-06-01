@@ -12,6 +12,7 @@ typedef struct
 typedef enum
 {
     NODE_INTEGER,
+    NODE_STRING,
     NODE_BINARY_OP,
     NODE_FUNCTION_CALL,
     NODE_IDENTIFIER,
@@ -46,6 +47,11 @@ struct Node
         {
             char *value;
         } identifier;
+
+        struct
+        {
+            char *value;
+        } string;
 
         NodeBlock block;
     };

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "lexer.h"
+#include "utils.h"
 
 void append_token(Token **head, TokenType token_type, TokenValue value,
                   char *symbol)
@@ -64,6 +65,18 @@ void print_token(Token *token)
     {
         printf("TOKEN [STAR] -> *\n");
     }
+    else if (token->type == TOKEN_SLASH)
+    {
+        printf("TOKEN [SLASH] -> *\n");
+    }
+    else if (token->type == TOKEN_QUOTE)
+    {
+        printf("TOKEN [QUOTE] -> \"\n");
+    }
+    else if (token->type == TOKEN_STRING)
+    {
+        printf("TOKEN [STRING] -> %s\n", token->symbol);
+    }
     else if (token->type == TOKEN_L_PAREN)
     {
         printf("TOKEN [LEFT PARANTHESIS] -> (\n");
@@ -87,7 +100,7 @@ void print_token(Token *token)
     }
     else if (token->type == TOKEN_FUNCTION_CALL)
     {
-        printf("TOKEN [FUNCTION] -> %s\n", symbol);
+        printf("TOKEN [FUNCTION] -> %s\n", "->");
     }
     else if (token->type == TOKEN_NEW_LINE)
     {
@@ -141,6 +154,33 @@ void handle_star(int *cursor, Token **head)
     append_token(head, TOKEN_STAR, (TokenValue){0}, "*\0");
 }
 
+void handle_slash(int *cursor, Token **head)
+{
+    (*cursor)++;
+    append_token(head, TOKEN_SLASH, (TokenValue){0}, "/\0");
+}
+
+void handle_string(const char *source, int *cursor, Token **head)
+{
+    (*cursor)++;
+    char current_char = source[*cursor];
+    int start = *cursor;
+
+    while (current_char != '"')
+    {
+        // printf("Current Char %c\n", current_char);
+        if (current_char == '\0')
+            raise_error("String literal must be closed with", "\"");
+        (*cursor)++;
+        current_char = source[*cursor];
+    }
+    int len = *cursor - start;
+    char *name = strndup(&source[start], len);
+    TokenValue val = {.text_val = name};
+    append_token(head, TOKEN_STRING, val, name);
+    (*cursor)++;
+}
+
 void handle_identifier(const char *source, int *cursor, Token **head)
 {
     int start = *cursor;
@@ -173,7 +213,11 @@ Token *tokenize(const char *source)
     while (source[cursor] != '\0')
     {
         char current_char = source[cursor];
-        if (isalpha(current_char))
+        if (current_char == '"')
+        {
+            handle_string(source, &cursor, &head);
+        }
+        else if (isalpha(current_char))
             handle_identifier(source, &cursor, &head);
         else if (is_function(source, &cursor))
         {
@@ -194,6 +238,11 @@ Token *tokenize(const char *source)
         {
             handle_star(&cursor, &head);
         }
+        else if (current_char == '/')
+        {
+            handle_slash(&cursor, &head);
+        }
+
         else if (current_char == ' ')
         {
             append_token(&head, TOKEN_SPACE, (TokenValue){0}, &current_char);
