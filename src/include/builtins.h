@@ -1,7 +1,7 @@
 #ifndef BUILTINS_H
 #define BUILTINS_H
 
-#include "eval.h"
+#include "interpreter.h"
 
 typedef enum
 {

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "lexer.h"
 #include "ast.h"
-#include "eval.h"
+#include "interpreter.h"
 #include "utils.h"
 
 int main(int argc, char **argv)
@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     // print_ast_block(ast);
     for (int i = 0; i < ast->count; i++)
     {
-        Value result = eval(ast->statements[i]);
+        Value result = interpret(ast->statements[i]);
         // print_value(result);
     }
 

@@ -2,5 +2,5 @@
 #include "ast.h"
 #include "value.h"
 
-Value eval(Node *node);
+Value interpret(Node *node);
 void print_value(Value v);

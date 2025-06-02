@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "eval.h"
+#include "interpreter.h"
 #include "value.h"
 #include "utils.h"
 #include "builtins.h"
 
-Value eval(Node *node)
+Value interpret(Node *node)
 {
     Value result;
     result.type = VALUE_NONE;
@@ -32,8 +32,8 @@ Value eval(Node *node)
 
     case NODE_BINARY_OP:
     {
-        Value left = eval(node->binary_op.left);
-        Value right = eval(node->binary_op.right);
+        Value left = interpret(node->binary_op.left);
+        Value right = interpret(node->binary_op.right);
         int is_float = (left.type == VALUE_FLOAT || right.type == VALUE_FLOAT);
 
         if (!is_float)
@@ -93,8 +93,8 @@ Value eval(Node *node)
     }
     case NODE_FUNCTION_CALL:
     {
-        Value left = eval(node->func_call.left);
-        Value right = eval(node->func_call.right);
+        Value left = interpret(node->func_call.left);
+        Value right = interpret(node->func_call.right);
         BuiltinFunction *fn = find_builtin(left.str_val);
         if (!fn)
             raise_error("Error: function not found", left.str_val);
