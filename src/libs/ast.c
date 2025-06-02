@@ -93,7 +93,7 @@ Node *parse_primary(Parser *parser)
         while (next && (next->type == TOKEN_SPACE || next->type == TOKEN_NEW_LINE))
             next = next->next;
 
-        if (next && next->type == TOKEN_FUNCTION_CALL)
+        if (next && next->type == TOKEN_L_PAREN)
         {
             return parse_function_call(parser, identifier_token);
         }
@@ -157,14 +157,6 @@ Node *parse_function_call(Parser *parser, Token *identifier_token)
 {
     advance(parser);
 
-    Token *arrow_token = parser->current;
-    if (arrow_token == NULL || arrow_token->type != TOKEN_FUNCTION_CALL)
-    {
-        raise_error("Expected '->'", arrow_token ? arrow_token->symbol : "");
-    }
-
-    advance(parser);
-
     if (parser->current == NULL || parser->current->type != TOKEN_L_PAREN)
     {
         raise_error("Expected '(' after ->", parser->current ? parser->current->symbol : "");
@@ -189,7 +181,6 @@ Node *parse_function_call(Parser *parser, Token *identifier_token)
     func_call->type = NODE_FUNCTION_CALL;
     func_call->func_call.left = identifier_node;
     func_call->func_call.right = arg_expr;
-    func_call->func_call.token = arrow_token;
 
     return func_call;
 }
@@ -257,7 +248,7 @@ void print_ast(Node *node, int level)
         if (node->number.type == NODE_INTEGER)
             printf("NUMBER (INT): %d\n", node->number.int_value);
         else if (node->number.type == NODE_FLOAT)
-            printf("NUMBER (FLOAT): %d\n", node->number.float_value);
+            printf("NUMBER (FLOAT): %f\n", node->number.float_value);
         break;
 
     case NODE_IDENTIFIER:

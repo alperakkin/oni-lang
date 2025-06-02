@@ -49,7 +49,7 @@ struct Node
         {
             Node *left;
             Node *right;
-            Token *token;
+
         } func_call;
 
         struct

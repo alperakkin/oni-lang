@@ -102,10 +102,6 @@ void print_token(Token *token)
     {
         printf("TOKEN [IDENTIFIER] -> %s\n", token->symbol);
     }
-    else if (token->type == TOKEN_FUNCTION_CALL)
-    {
-        printf("TOKEN [FUNCTION] -> %s\n", "->");
-    }
     else if (token->type == TOKEN_NEW_LINE)
     {
         printf("TOKEN [NEW LINE] -> %s\n", symbol);
@@ -226,12 +222,6 @@ void handle_identifier(const char *source, int *cursor, Token **head)
     append_token(head, TOKEN_IDENTIFIER, val, name);
 }
 
-bool is_function(const char *source, int *cursor)
-{
-    if (source[*cursor] == '-' && source[*cursor + 1] == '>')
-        return true;
-    return false;
-}
 Token *tokenize(const char *source)
 {
     Token *head = NULL;
@@ -246,11 +236,6 @@ Token *tokenize(const char *source)
         }
         else if (isalpha(current_char))
             handle_identifier(source, &cursor, &head);
-        else if (is_function(source, &cursor))
-        {
-            append_token(&head, TOKEN_FUNCTION_CALL, (TokenValue){0}, "->");
-            cursor += 2;
-        }
         else if (isdigit(current_char))
             handle_number(source, &cursor, &head);
         else if (current_char == '+')

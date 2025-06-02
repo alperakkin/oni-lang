@@ -17,7 +17,6 @@ typedef enum
     TOKEN_EOF,
     TOKEN_BAD,
     TOKEN_SPACE,
-    TOKEN_FUNCTION_CALL,
     TOKEN_COMMA,
     TOKEN_NEW_LINE,
     TOKEN_L_PAREN,
@@ -42,7 +41,6 @@ typedef struct Token
     struct Token *next;
 } Token;
 
-bool is_function(const char *source, int *cursor);
 void append_token(Token **head, TokenType token_type, TokenValue value,
                   char *symbol);
 void free_tokens(Token *head);
