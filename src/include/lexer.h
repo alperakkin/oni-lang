@@ -4,25 +4,26 @@
 
 typedef enum
 {
-    TOKEN_INTEGER,
-    TOKEN_FLOAT,
-    TOKEN_BOOL,
-    TOKEN_IDENTIFIER,
-    TOKEN_PLUS,
-    TOKEN_MINUS,
-    TOKEN_STAR,
-    TOKEN_SLASH,
-    TOKEN_ASSIGN,
-    TOKEN_RPAREN,
-    TOKEN_EOF,
-    TOKEN_BAD,
-    TOKEN_SPACE,
-    TOKEN_COMMA,
-    TOKEN_NEW_LINE,
-    TOKEN_L_PAREN,
-    TOKEN_R_PAREN,
-    TOKEN_QUOTE,
-    TOKEN_STRING,
+    TK_INTEGER,
+    TK_FLOAT,
+    TK_BOOL,
+    TK_IDENTIFIER,
+    TK_PLUS,
+    TK_MINUS,
+    TK_STAR,
+    TK_SLASH,
+    TK_ASSIGN,
+    TK_RPAREN,
+    TK_EOF,
+    TK_BAD,
+    TK_SPACE,
+    TK_COMMA,
+    TK_NEW_LINE,
+    TK_L_PAREN,
+    TK_R_PAREN,
+    TK_QUOTE,
+    TK_STRING,
+    TK_COMMENT,
 } TokenType;
 
 typedef union
@@ -41,11 +42,12 @@ typedef struct Token
     struct Token *next;
 } Token;
 
-void append_token(Token **head, TokenType token_type, TokenValue value,
+void append_token(Token **head, TokenType TK_type, TokenValue value,
                   char *symbol);
 void free_tokens(Token *head);
 void print_token(Token *token);
 void print_tokens(Token *tokens);
+void handle_comment(const char *source, int *cursor, Token **head);
 void handle_number(const char *source, int *cursor, Token **head);
 void handle_plus(int *cursor, Token **head);
 void handle_string(const char *source, int *cursor, Token **head);

@@ -45,16 +45,16 @@ Value interpret(Node *node)
 
             switch (node->binary_op.token->type)
             {
-            case TOKEN_PLUS:
+            case TK_PLUS:
                 result.int_val = l + r;
                 break;
-            case TOKEN_MINUS:
+            case TK_MINUS:
                 result.int_val = l - r;
                 break;
-            case TOKEN_STAR:
+            case TK_STAR:
                 result.int_val = l * r;
                 break;
-            case TOKEN_SLASH:
+            case TK_SLASH:
                 result.int_val = l / r;
                 break;
             default:
@@ -69,16 +69,16 @@ Value interpret(Node *node)
 
             switch (node->binary_op.token->type)
             {
-            case TOKEN_PLUS:
+            case TK_PLUS:
                 result.float_val = l + r;
                 break;
-            case TOKEN_MINUS:
+            case TK_MINUS:
                 result.float_val = l - r;
                 break;
-            case TOKEN_STAR:
+            case TK_STAR:
                 result.float_val = l * r;
                 break;
-            case TOKEN_SLASH:
+            case TK_SLASH:
                 result.float_val = l / r;
                 break;
             default:

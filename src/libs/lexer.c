@@ -6,13 +6,13 @@
 #include "lexer.h"
 #include "utils.h"
 
-void append_token(Token **head, TokenType token_type, TokenValue value,
+void append_token(Token **head, TokenType TK_type, TokenValue value,
                   char *symbol)
 {
     Token *new_token = malloc(sizeof(Token));
     if (!new_token)
         return;
-    new_token->type = token_type;
+    new_token->type = TK_type;
     new_token->value = value;
     new_token->symbol = symbol ? strdup(symbol) : NULL;
     new_token->next = NULL;
@@ -48,63 +48,67 @@ void print_token(Token *token)
     char symbol[2];
     symbol[0] = *token->symbol;
     symbol[1] = '\0';
-    if (token->type == TOKEN_INTEGER)
+    if (token->type == TK_INTEGER)
     {
 
         printf("TOKEN [INTEGER] -> %d\n", token->value.int_val);
     }
-    else if (token->type == TOKEN_FLOAT)
+    else if (token->type == TK_FLOAT)
     {
         printf("TOKEN [FLOAT] -> %f\n", token->value.float_val);
     }
-    else if (token->type == TOKEN_PLUS)
+    else if (token->type == TK_PLUS)
     {
         printf("TOKEN [PLUS] -> +\n");
     }
-    else if (token->type == TOKEN_MINUS)
+    else if (token->type == TK_MINUS)
     {
         printf("TOKEN [MINUS] -> -\n");
     }
-    else if (token->type == TOKEN_STAR)
+    else if (token->type == TK_STAR)
     {
         printf("TOKEN [STAR] -> *\n");
     }
-    else if (token->type == TOKEN_SLASH)
+    else if (token->type == TK_SLASH)
     {
         printf("TOKEN [SLASH] -> *\n");
     }
-    else if (token->type == TOKEN_QUOTE)
+    else if (token->type == TK_QUOTE)
     {
         printf("TOKEN [QUOTE] -> \"\n");
     }
-    else if (token->type == TOKEN_STRING)
+    else if (token->type == TK_STRING)
     {
         printf("TOKEN [STRING] -> %s\n", token->symbol);
     }
-    else if (token->type == TOKEN_L_PAREN)
+    else if (token->type == TK_L_PAREN)
     {
         printf("TOKEN [LEFT PARANTHESIS] -> (\n");
     }
-    else if (token->type == TOKEN_R_PAREN)
+    else if (token->type == TK_R_PAREN)
     {
         printf("TOKEN [RIGHT PARANTHESIS] -> )\n");
     }
-    else if (token->type == TOKEN_BAD)
+    else if (token->type == TK_BAD)
     {
         printf("Undefined Token -> %s\n", symbol);
     }
-    else if (token->type == TOKEN_SPACE)
+    else if (token->type == TK_SPACE)
     {
 
         printf("TOKEN [SPACE] -> %s\n", symbol);
     }
-    else if (token->type == TOKEN_IDENTIFIER)
+    else if (token->type == TK_IDENTIFIER)
     {
         printf("TOKEN [IDENTIFIER] -> %s\n", token->symbol);
     }
-    else if (token->type == TOKEN_NEW_LINE)
+    else if (token->type == TK_NEW_LINE)
     {
         printf("TOKEN [NEW LINE] -> %s\n", symbol);
+    }
+    else if (token->type == TK_COMMENT)
+    {
+        printf("TOKEN [COMMENT] -> %s\n", token->value.text_val);
     }
     else
     {
@@ -149,13 +153,13 @@ void handle_number(const char *source, int *cursor, Token **head)
     {
         float fval = atof(number_str);
         TokenValue val = {.float_val = fval};
-        append_token(head, TOKEN_FLOAT, val, number_str);
+        append_token(head, TK_FLOAT, val, number_str);
     }
     else
     {
         int ival = atoi(number_str);
         TokenValue val = {.int_val = ival};
-        append_token(head, TOKEN_INTEGER, val, number_str);
+        append_token(head, TK_INTEGER, val, number_str);
     }
     free(number_str);
 }
@@ -163,24 +167,24 @@ void handle_number(const char *source, int *cursor, Token **head)
 void handle_plus(int *cursor, Token **head)
 {
     (*cursor)++;
-    append_token(head, TOKEN_PLUS, (TokenValue){0}, "+\0");
+    append_token(head, TK_PLUS, (TokenValue){0}, "+\0");
 }
 void handle_minus(int *cursor, Token **head)
 {
 
     (*cursor)++;
-    append_token(head, TOKEN_MINUS, (TokenValue){0}, "-\0");
+    append_token(head, TK_MINUS, (TokenValue){0}, "-\0");
 }
 void handle_star(int *cursor, Token **head)
 {
     (*cursor)++;
-    append_token(head, TOKEN_STAR, (TokenValue){0}, "*\0");
+    append_token(head, TK_STAR, (TokenValue){0}, "*\0");
 }
 
 void handle_slash(int *cursor, Token **head)
 {
     (*cursor)++;
-    append_token(head, TOKEN_SLASH, (TokenValue){0}, "/\0");
+    append_token(head, TK_SLASH, (TokenValue){0}, "/\0");
 }
 
 void handle_string(const char *source, int *cursor, Token **head)
@@ -191,7 +195,6 @@ void handle_string(const char *source, int *cursor, Token **head)
 
     while (current_char != '"')
     {
-        // printf("Current Char %c\n", current_char);
         if (current_char == '\0')
             raise_error("String literal must be closed with", "\"");
         (*cursor)++;
@@ -200,10 +203,28 @@ void handle_string(const char *source, int *cursor, Token **head)
     int len = *cursor - start;
     char *name = strndup(&source[start], len);
     TokenValue val = {.text_val = name};
-    append_token(head, TOKEN_STRING, val, name);
+    append_token(head, TK_STRING, val, name);
     (*cursor)++;
 }
+void handle_comment(const char *source, int *cursor, Token **head)
+{
+    bool is_comment = false;
+    (*cursor)++;
+    int start = *cursor;
+    if (source[*cursor] == ':')
+    {
+        (*cursor)++;
+        is_comment = true;
+    }
+    while (source[*cursor] != '\n' && source[*cursor] != '\0')
+        (*cursor)++;
 
+    int len = *cursor - start;
+    TokenValue value = {.text_val = strndup(&source[start], len)};
+
+    if (is_comment)
+        append_token(head, TK_COMMENT, value, "!!");
+}
 void handle_identifier(const char *source, int *cursor, Token **head)
 {
     int start = *cursor;
@@ -219,7 +240,7 @@ void handle_identifier(const char *source, int *cursor, Token **head)
     TokenValue val = {0};
     val.identifier = name;
 
-    append_token(head, TOKEN_IDENTIFIER, val, name);
+    append_token(head, TK_IDENTIFIER, val, name);
 }
 
 Token *tokenize(const char *source)
@@ -230,7 +251,11 @@ Token *tokenize(const char *source)
     while (source[cursor] != '\0')
     {
         char current_char = source[cursor];
-        if (current_char == '"')
+        if (current_char == '!')
+        {
+            handle_comment(source, &cursor, &head);
+        }
+        else if (current_char == '"')
         {
             handle_string(source, &cursor, &head);
         }
@@ -257,22 +282,22 @@ Token *tokenize(const char *source)
 
         else if (current_char == ' ')
         {
-            append_token(&head, TOKEN_SPACE, (TokenValue){0}, &current_char);
+            append_token(&head, TK_SPACE, (TokenValue){0}, &current_char);
             cursor++;
         }
         else if (current_char == '\n')
         {
-            append_token(&head, TOKEN_NEW_LINE, (TokenValue){0}, &current_char);
+            append_token(&head, TK_NEW_LINE, (TokenValue){0}, &current_char);
             cursor++;
         }
         else if (current_char == '(')
         {
-            append_token(&head, TOKEN_L_PAREN, (TokenValue){0}, &current_char);
+            append_token(&head, TK_L_PAREN, (TokenValue){0}, &current_char);
             cursor++;
         }
         else if (current_char == ')')
         {
-            append_token(&head, TOKEN_R_PAREN, (TokenValue){0}, &current_char);
+            append_token(&head, TK_R_PAREN, (TokenValue){0}, &current_char);
             cursor++;
         }
 
@@ -281,7 +306,7 @@ Token *tokenize(const char *source)
             char symbol[2];
             symbol[0] = current_char;
             symbol[1] = '\0';
-            append_token(&head, TOKEN_BAD, (TokenValue){0}, symbol);
+            append_token(&head, TK_BAD, (TokenValue){0}, symbol);
             cursor++;
         }
     }

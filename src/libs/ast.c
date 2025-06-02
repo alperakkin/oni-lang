@@ -5,17 +5,18 @@
 #include "utils.h"
 
 static Token *advance(Parser *parser);
+void skip_nodes(Parser *parser);
 static Node *parse_primary(Parser *parser);
 
 int get_precedence(TokenType type)
 {
     switch (type)
     {
-    case TOKEN_PLUS:
-    case TOKEN_MINUS:
+    case TK_PLUS:
+    case TK_MINUS:
         return 1;
-    case TOKEN_STAR:
-    case TOKEN_SLASH:
+    case TK_STAR:
+    case TK_SLASH:
         return 2;
     default:
         return 0;
@@ -24,11 +25,12 @@ int get_precedence(TokenType type)
 
 static Token *advance(Parser *parser)
 {
-    if (parser->current != NULL)
+    if (parser->current != NULL && parser->current->type != TK_COMMENT)
         parser->current = parser->current->next;
 
-    while (parser->current != NULL && (parser->current->type == TOKEN_SPACE))
+    while (parser->current != NULL && (parser->current->type == TK_SPACE || parser->current->type == TK_COMMENT))
     {
+
         parser->current = parser->current->next;
     }
 
@@ -37,12 +39,13 @@ static Token *advance(Parser *parser)
 
 Node *parse_primary(Parser *parser)
 {
+
     Token *token = parser->current;
 
     if (token == NULL)
         raise_error("No token found", "");
 
-    if (token->type == TOKEN_L_PAREN)
+    if (token->type == TK_L_PAREN)
     {
         advance(parser);
         if (parser->current == NULL)
@@ -50,14 +53,14 @@ Node *parse_primary(Parser *parser)
 
         Node *expr = parse_expression(parser, 0);
 
-        if (parser->current == NULL || parser->current->type != TOKEN_R_PAREN)
+        if (parser->current == NULL || parser->current->type != TK_R_PAREN)
             raise_error("Expected closing parenthesis", token->symbol);
 
         advance(parser);
         return expr;
     }
 
-    if (token->type == TOKEN_INTEGER)
+    if (token->type == TK_INTEGER)
     {
         Node *node = malloc(sizeof(Node));
         node->type = NODE_NUMBER;
@@ -67,7 +70,7 @@ Node *parse_primary(Parser *parser)
         advance(parser);
         return node;
     }
-    if (token->type == TOKEN_FLOAT)
+    if (token->type == TK_FLOAT)
     {
         Node *node = malloc(sizeof(Node));
         node->type = NODE_NUMBER;
@@ -77,7 +80,7 @@ Node *parse_primary(Parser *parser)
         advance(parser);
         return node;
     }
-    if (token->type == TOKEN_STRING)
+    if (token->type == TK_STRING)
     {
         advance(parser);
         Node *node = malloc(sizeof(Node));
@@ -86,14 +89,14 @@ Node *parse_primary(Parser *parser)
         return node;
     }
 
-    if (token->type == TOKEN_IDENTIFIER)
+    if (token->type == TK_IDENTIFIER)
     {
         Token *identifier_token = token;
         Token *next = token->next;
-        while (next && (next->type == TOKEN_SPACE || next->type == TOKEN_NEW_LINE))
+        while (next && (next->type == TK_SPACE || next->type == TK_NEW_LINE))
             next = next->next;
 
-        if (next && next->type == TOKEN_L_PAREN)
+        if (next && next->type == TK_L_PAREN)
         {
             return parse_function_call(parser, identifier_token);
         }
@@ -108,7 +111,8 @@ Node *parse_primary(Parser *parser)
     char symbol[2];
     symbol[0] = *token->symbol;
     symbol[1] = '\0';
-
+    printf("------\n");
+    print_token(token);
     raise_error("Unexpected token type", symbol);
     return NULL;
 }
@@ -117,7 +121,7 @@ Node *parse_expression(Parser *parser, int min_precedence)
 {
     if (parser->current == NULL)
         raise_error("Unexpected end of expression", "");
-    if (parser->current->type == TOKEN_BAD)
+    if (parser->current->type == TK_BAD)
     {
         raise_error("Syntax Error: Bad Token", parser->current->symbol);
     }
@@ -129,10 +133,10 @@ Node *parse_expression(Parser *parser, int min_precedence)
 
         Token *token = parser->current;
 
-        if (token->type == TOKEN_NEW_LINE || token->type == TOKEN_EOF)
+        if (token->type == TK_NEW_LINE || token->type == TK_EOF || token->type == TK_COMMENT)
             break;
 
-        if (token->type == TOKEN_R_PAREN)
+        if (token->type == TK_R_PAREN)
             break;
         int precedence = get_precedence(token->type);
         if (precedence < min_precedence)
@@ -157,7 +161,7 @@ Node *parse_function_call(Parser *parser, Token *identifier_token)
 {
     advance(parser);
 
-    if (parser->current == NULL || parser->current->type != TOKEN_L_PAREN)
+    if (parser->current == NULL || parser->current->type != TK_L_PAREN)
     {
         raise_error("Expected '(' after ->", parser->current ? parser->current->symbol : "");
     }
@@ -166,7 +170,7 @@ Node *parse_function_call(Parser *parser, Token *identifier_token)
 
     Node *arg_expr = parse_expression(parser, 0);
 
-    if (parser->current == NULL || parser->current->type != TOKEN_R_PAREN)
+    if (parser->current == NULL || parser->current->type != TK_R_PAREN)
     {
         raise_error("Expected ')' after expression in function call", parser->current ? parser->current->symbol : "");
     }
@@ -190,20 +194,20 @@ NodeBlock *parse(Parser *parser)
     NodeBlock *block = malloc(sizeof(NodeBlock));
     block->statements = NULL;
     block->count = 0;
-
     while (parser->current != NULL)
     {
+        if (parser->current->type == TK_NEW_LINE || parser->current->type == TK_COMMENT)
+        {
+            advance(parser);
+            continue;
+        }
+
         Node *stmt = parse_expression(parser, 0);
         if (stmt != NULL)
         {
             block->count++;
             block->statements = realloc(block->statements, sizeof(Node *) * block->count);
             block->statements[block->count - 1] = stmt;
-        }
-
-        while (parser->current != NULL && parser->current->type == TOKEN_NEW_LINE)
-        {
-            advance(parser);
         }
     }
 

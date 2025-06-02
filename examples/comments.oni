@@ -1,0 +1,4 @@
+!: ONI LANG 1.0
+print(3.4+2)
+print("")
+print("Hello World") !: this is a comment
