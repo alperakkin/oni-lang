@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "lexer.h"
 #include "ast.h"
 #include "interpreter.h"
 #include "utils.h"
+#include "variable.h"
 
 int main(int argc, char **argv)
 {
@@ -15,13 +17,18 @@ int main(int argc, char **argv)
     parser.current = tokens;
     NodeBlock *ast = parse(&parser);
     // print_ast_block(ast);
+
+    GlobalScope *globals = init_globals();
+
     for (int i = 0; i < ast->count; i++)
     {
-        Value result = interpret(ast->statements[i]);
+        Value result = interpret(ast->statements[i], globals);
         // print_value(result);
     }
+    print_globals(globals);
 
     free_tokens(tokens);
     free_node(ast);
+    // TODO: free globals
     return 0;
 }

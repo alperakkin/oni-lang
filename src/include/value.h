@@ -4,6 +4,7 @@ typedef enum
     VALUE_INT,
     VALUE_STRING,
     VALUE_FLOAT,
+    VALUE_VARIABLE,
     VALUE_NONE
 } ValueType;
 

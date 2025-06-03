@@ -3,9 +3,9 @@
 #include <string.h>
 #include "ast.h"
 #include "utils.h"
+#include "variable.h"
 
 static Token *advance(Parser *parser);
-void skip_nodes(Parser *parser);
 static Node *parse_primary(Parser *parser);
 
 int get_precedence(TokenType type)
@@ -25,6 +25,7 @@ int get_precedence(TokenType type)
 
 static Token *advance(Parser *parser)
 {
+
     if (parser->current != NULL && parser->current->type != TK_COMMENT)
         parser->current = parser->current->next;
 
@@ -35,6 +36,20 @@ static Token *advance(Parser *parser)
     }
 
     return parser->current;
+}
+
+bool is_variable(Token *token)
+{
+    char *identifier = token->value.identifier;
+
+    char *var_list[] = {"int", "float", "str"};
+    size_t var_len = sizeof(var_list) / sizeof(var_list[0]);
+    for (size_t i = 0; i < var_len; i++)
+    {
+        if (strcmp(identifier, var_list[i]) == 0)
+            return true;
+    }
+    return false;
 }
 
 Node *parse_primary(Parser *parser)
@@ -100,6 +115,10 @@ Node *parse_primary(Parser *parser)
         {
             return parse_function_call(parser, identifier_token);
         }
+        else if (is_variable(identifier_token))
+        {
+            return parse_variable(parser, identifier_token);
+        }
 
         advance(parser);
         Node *node = malloc(sizeof(Node));
@@ -111,7 +130,7 @@ Node *parse_primary(Parser *parser)
     char symbol[2];
     symbol[0] = *token->symbol;
     symbol[1] = '\0';
-    printf("------\n");
+    printf("---ERR---\n");
     print_token(token);
     raise_error("Unexpected token type", symbol);
     return NULL;
@@ -157,6 +176,41 @@ Node *parse_expression(Parser *parser, int min_precedence)
     return left;
 }
 
+Node *parse_variable(Parser *parser, Token *identifier_token)
+{
+    advance(parser);
+    Token *token = parser->current;
+    if (token->type != TK_IDENTIFIER)
+        raise_error("Variable name not provided", token->symbol);
+    Token *var_name = token;
+    var_name->type = identifier_token->type;
+    advance(parser);
+    token = parser->current;
+    Node *assigned_val = NULL;
+    if (token->type == TK_ASSIGN)
+    {
+        advance(parser);
+        assigned_val = parse_expression(parser, 0);
+    }
+    else
+    {
+        Node *assigned_val = malloc(sizeof(Node));
+        assigned_val->type = NODE_NULL;
+    }
+
+    Node *variable_node = malloc(sizeof(Node));
+
+    variable_node->type = NODE_VARIABLE;
+    variable_node->variable.local = false;
+    variable_node->variable.name = var_name->value.identifier;
+    variable_node->variable.value = assigned_val;
+    variable_node->variable.type = identifier_token->value.identifier;
+
+    advance(parser);
+
+    return variable_node;
+}
+
 Node *parse_function_call(Parser *parser, Token *identifier_token)
 {
     advance(parser);
@@ -196,6 +250,7 @@ NodeBlock *parse(Parser *parser)
     block->count = 0;
     while (parser->current != NULL)
     {
+
         if (parser->current->type == TK_NEW_LINE || parser->current->type == TK_COMMENT)
         {
             advance(parser);
@@ -274,8 +329,13 @@ void print_ast(Node *node, int level)
         print_ast(node->func_call.left, level + 1);
         print_ast(node->func_call.right, level + 1);
         break;
+    case NODE_VARIABLE:
+        printf("Variable: %s (%s) \n", node->variable.name, node->variable.type);
+        print_ast(node->variable.value, level + 1);
+        break;
 
     default:
+        printf(": %d\n", node->type);
         printf("Unknown node type\n");
     }
 }

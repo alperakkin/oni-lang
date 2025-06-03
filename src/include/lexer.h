@@ -24,6 +24,8 @@ typedef enum
     TK_QUOTE,
     TK_STRING,
     TK_COMMENT,
+    TK_COMP,
+    TK_NULL,
 } TokenType;
 
 typedef union
@@ -52,5 +54,6 @@ void handle_number(const char *source, int *cursor, Token **head);
 void handle_plus(int *cursor, Token **head);
 void handle_string(const char *source, int *cursor, Token **head);
 void handle_identifier(const char *source, int *cursor, Token **head);
+void handle_equals(const char *source, int *cursor, Token **head);
 Token *tokenize(const char *source);
 #endif

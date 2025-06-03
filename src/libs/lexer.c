@@ -110,6 +110,14 @@ void print_token(Token *token)
     {
         printf("TOKEN [COMMENT] -> %s\n", token->value.text_val);
     }
+    else if (token->type == TK_ASSIGN)
+    {
+        printf("TOKEN [ASSIGN] -> %s\n", symbol);
+    }
+    else if (token->type == TK_COMP)
+    {
+        printf("TOKEN [COMPARISON] -> %s\n", symbol);
+    }
     else
     {
         printf("Unexpected TOKEN!!\n");
@@ -223,8 +231,19 @@ void handle_comment(const char *source, int *cursor, Token **head)
     TokenValue value = {.text_val = strndup(&source[start], len)};
 
     if (is_comment)
-        append_token(head, TK_COMMENT, value, "!!");
+        append_token(head, TK_COMMENT, value, ":!");
 }
+
+void handle_equals(const char *source, int *cursor, Token **head)
+{
+    (*cursor)++;
+
+    if (source[*cursor] == '=')
+        append_token(head, TK_COMP, (TokenValue){0}, "==");
+    else
+        append_token(head, TK_ASSIGN, (TokenValue){0}, "=");
+}
+
 void handle_identifier(const char *source, int *cursor, Token **head)
 {
     int start = *cursor;
@@ -278,6 +297,10 @@ Token *tokenize(const char *source)
         else if (current_char == '/')
         {
             handle_slash(&cursor, &head);
+        }
+        else if (current_char == '=')
+        {
+            handle_equals(source, &cursor, &head);
         }
 
         else if (current_char == ' ')

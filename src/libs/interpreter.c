@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "interpreter.h"
 #include "value.h"
 #include "utils.h"
 #include "builtins.h"
 
-Value interpret(Node *node)
+Value interpret(Node *node, GlobalScope *globals)
 {
     Value result;
     result.type = VALUE_NONE;
@@ -32,8 +33,8 @@ Value interpret(Node *node)
 
     case NODE_BINARY_OP:
     {
-        Value left = interpret(node->binary_op.left);
-        Value right = interpret(node->binary_op.right);
+        Value left = interpret(node->binary_op.left, globals);
+        Value right = interpret(node->binary_op.right, globals);
         int is_float = (left.type == VALUE_FLOAT || right.type == VALUE_FLOAT);
 
         if (!is_float)
@@ -93,8 +94,8 @@ Value interpret(Node *node)
     }
     case NODE_FUNCTION_CALL:
     {
-        Value left = interpret(node->func_call.left);
-        Value right = interpret(node->func_call.right);
+        Value left = interpret(node->func_call.left, globals);
+        Value right = interpret(node->func_call.right, globals);
         BuiltinFunction *fn = find_builtin(left.str_val);
         if (!fn)
             raise_error("Error: function not found", left.str_val);
@@ -111,6 +112,29 @@ Value interpret(Node *node)
         result.str_val = node->string.value;
         return result;
     }
+    case NODE_VARIABLE:
+        result.type = VALUE_VARIABLE;
+        Variable var;
+        var.name = strdup(node->variable.name);
+        Value right = interpret(node->variable.value, globals);
+
+        if (right.type == VALUE_INT)
+        {
+            var.int_value = right.int_val;
+            var.type = VARIABLE_INT;
+        }
+        if (right.type == VALUE_STRING)
+        {
+            var.string_value = strdup(right.str_val);
+            var.type = VARIABLE_STR;
+        }
+        if (right.type == VALUE_FLOAT)
+        {
+            var.float_value = right.float_val;
+            var.type = VARIABLE_FLOAT;
+        }
+        add_variable(globals, var);
+        return result;
     default:
         printf("Node Type %d\n", node->type);
         raise_error("Error: unsupported node type", "");

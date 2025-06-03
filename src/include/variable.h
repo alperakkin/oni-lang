@@ -1,0 +1,38 @@
+#pragma once
+
+typedef enum
+{
+    VARIABLE_STR,
+    VARIABLE_INT,
+    VARIABLE_FLOAT
+} VariableType;
+
+typedef struct
+{
+    char *name;
+    VariableType type;
+    union
+    {
+        int int_value;
+        float float_value;
+        char *string_value;
+    };
+} Variable;
+
+typedef struct
+{
+    Variable *variables;
+    int count;
+
+} GlobalScope;
+
+typedef struct
+{
+    Variable *variables;
+    int count;
+
+} LocalScope;
+
+void add_variable(GlobalScope *scope, Variable var);
+void print_globals(GlobalScope *scope);
+GlobalScope *init_globals();
