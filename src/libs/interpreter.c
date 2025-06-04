@@ -118,19 +118,22 @@ Value interpret(Node *node, GlobalScope *globals)
         var.name = strdup(node->variable.name);
         Value right = interpret(node->variable.value, globals);
 
-        if (right.type == VALUE_INT)
+        if (strcmp(node->variable.type, "int") == 0)
         {
-            var.int_value = right.int_val;
+            int int_val = right.type == VALUE_FLOAT ? (int)right.float_val : right.int_val;
+            var.int_value = int_val;
             var.type = VARIABLE_INT;
         }
-        if (right.type == VALUE_STRING)
+        if (strcmp(node->variable.type, "str") == 0)
         {
             var.string_value = strdup(right.str_val);
             var.type = VARIABLE_STR;
         }
-        if (right.type == VALUE_FLOAT)
+        if (strcmp(node->variable.type, "float") == 0)
         {
-            var.float_value = right.float_val;
+            float float_val = right.type == VALUE_INT ? (float)right.int_val : right.float_val;
+
+            var.float_value = float_val;
             var.type = VARIABLE_FLOAT;
         }
         add_variable(globals, var);

@@ -43,12 +43,12 @@ void print_globals(GlobalScope *scope)
         if (var.type == VARIABLE_STR)
         {
             printf("    %s (str): ", var.name);
-            printf("%d,\n", var.int_value);
+            printf("%s,\n", var.string_value);
         }
         else if (var.type == VARIABLE_FLOAT)
         {
             printf("    %s (float): ", var.name);
-            printf("%d,\n", var.int_value);
+            printf("%f,\n", var.float_value);
         }
         else if (var.type == VARIABLE_INT)
         {
