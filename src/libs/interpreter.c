@@ -126,10 +126,11 @@ Value interpret(Node *node, GlobalScope *globals)
             result.float_val = var.float_value;
             return result;
         }
-        if (var.type == VALUE_STRING)
+        if (var.type == VARIABLE_STR)
         {
             result.type = VALUE_STRING;
             result.str_val = strdup(var.string_value);
+
             return result;
         }
         return result;
