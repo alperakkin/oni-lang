@@ -12,7 +12,7 @@ void add_variable(GlobalScope *scope, Variable var)
         fprintf(stderr, "Memory allocation failed in add_variable\n");
         exit(1);
     }
-    printf("Name: %s, ValType: %u, Val:%d\n", var.name, var.type, var.int_value);
+    // printf("Name: %s, ValType: %u, Val:%d\n", var.name, var.type, var.int_value);
 
     scope->variables = new_vars;
     scope->variables[scope->count].type = var.type;
@@ -30,6 +30,19 @@ void add_variable(GlobalScope *scope, Variable var)
         break;
     }
     scope->count++;
+}
+
+int get_variable(GlobalScope *scope, char *var_name)
+{
+
+    for (int index = 0; index < scope->count; index++)
+    {
+        Variable var = scope->variables[index];
+
+        if (strcmp(var.name, var_name) == 0)
+            return index;
+    }
+    return -1;
 }
 
 GlobalScope *init_globals()

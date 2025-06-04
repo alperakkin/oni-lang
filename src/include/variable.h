@@ -34,5 +34,6 @@ typedef struct
 } LocalScope;
 
 void add_variable(GlobalScope *scope, Variable var);
+int get_variable(GlobalScope *scope, char *var_name);
 void print_globals(GlobalScope *scope);
 GlobalScope *init_globals();

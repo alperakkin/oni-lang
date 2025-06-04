@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         Value result = interpret(ast->statements[i], globals);
         // print_value(result);
     }
-    print_globals(globals);
+    // print_globals(globals);
 
     free_tokens(tokens);
     free_node(ast);

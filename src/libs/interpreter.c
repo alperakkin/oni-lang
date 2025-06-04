@@ -103,7 +103,35 @@ Value interpret(Node *node, GlobalScope *globals)
     }
     case NODE_IDENTIFIER:
     {
-        result.str_val = node->identifier.value;
+        int index = get_variable(globals, node->identifier.value);
+
+        if (index == -1)
+        {
+            result.str_val = node->identifier.value;
+            return result;
+        }
+
+        Variable var = globals->variables[index];
+
+        if (var.type == VARIABLE_INT)
+        {
+
+            result.type = VALUE_INT;
+            result.int_val = var.int_value;
+            return result;
+        }
+        if (var.type == VARIABLE_FLOAT)
+        {
+            result.type = VALUE_FLOAT;
+            result.float_val = var.float_value;
+            return result;
+        }
+        if (var.type == VALUE_STRING)
+        {
+            result.type = VALUE_STRING;
+            result.str_val = strdup(var.string_value);
+            return result;
+        }
         return result;
     }
     case NODE_STRING:
