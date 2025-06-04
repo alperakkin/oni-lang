@@ -184,6 +184,7 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
         raise_error("Variable name not provided", token->symbol);
     Token *var_name = token;
     var_name->type = identifier_token->type;
+
     advance(parser);
     token = parser->current;
     Node *assigned_val = NULL;

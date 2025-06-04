@@ -36,8 +36,29 @@ Value interpret(Node *node, GlobalScope *globals)
         Value left = interpret(node->binary_op.left, globals);
         Value right = interpret(node->binary_op.right, globals);
         int is_float = (left.type == VALUE_FLOAT || right.type == VALUE_FLOAT);
+        int assignment = node->binary_op.token->type == TK_ASSIGN;
+        if (assignment)
+        {
 
-        if (!is_float)
+            int index = get_variable(globals, node->binary_op.left->identifier.value);
+
+            switch (right.type)
+            {
+            case VALUE_FLOAT:
+                globals->variables[index].float_value = right.float_val;
+                break;
+            case VALUE_INT:
+                globals->variables[index].int_value = right.int_val;
+                break;
+            case VALUE_STRING:
+                globals->variables[index].string_value = strdup(right.str_val);
+                break;
+            default:
+                break;
+            }
+        }
+
+        else if (!is_float)
         {
 
             result.type = VALUE_INT;

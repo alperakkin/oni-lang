@@ -1,6 +1,7 @@
 int x = 1
 float y = 1.2
 str z = "hello"
+
 print(x+1)
 print(y)
 print(z)
