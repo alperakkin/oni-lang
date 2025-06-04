@@ -1,2 +1,3 @@
-float x = 1*3+2
-
+int x = 1
+float y = 3.2
+str t = "alper"

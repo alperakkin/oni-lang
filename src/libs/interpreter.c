@@ -114,7 +114,9 @@ Value interpret(Node *node, GlobalScope *globals)
     }
     case NODE_VARIABLE:
         result.type = VALUE_VARIABLE;
-        Variable var;
+        Variable var = {0};
+        if (!node->variable.name)
+            raise_error("Variable Name not assigned", "");
         var.name = strdup(node->variable.name);
         Value right = interpret(node->variable.value, globals);
 

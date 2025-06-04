@@ -206,8 +206,6 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
     variable_node->variable.value = assigned_val;
     variable_node->variable.type = identifier_token->value.identifier;
 
-    advance(parser);
-
     return variable_node;
 }
 

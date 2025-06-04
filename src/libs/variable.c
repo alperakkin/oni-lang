@@ -17,8 +17,18 @@ void add_variable(GlobalScope *scope, Variable var)
     scope->variables = new_vars;
     scope->variables[scope->count].type = var.type;
     scope->variables[scope->count].name = strdup(var.name);
-    scope->variables[scope->count].int_value = var.int_value;
-    scope->variables[scope->count].float_value = var.float_value;
+    switch (var.type)
+    {
+    case VARIABLE_INT:
+        scope->variables[scope->count].int_value = var.int_value;
+        break;
+    case VARIABLE_FLOAT:
+        scope->variables[scope->count].float_value = var.float_value;
+        break;
+    case VARIABLE_STR:
+        scope->variables[scope->count].string_value = strdup(var.string_value);
+        break;
+    }
     scope->count++;
 }
 
@@ -43,7 +53,7 @@ void print_globals(GlobalScope *scope)
         if (var.type == VARIABLE_STR)
         {
             printf("    %s (str): ", var.name);
-            printf("%s,\n", var.string_value);
+            printf("\"%s\",\n", var.string_value);
         }
         else if (var.type == VARIABLE_FLOAT)
         {
