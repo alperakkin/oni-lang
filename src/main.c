@@ -29,6 +29,6 @@ int main(int argc, char **argv)
 
     free_tokens(tokens);
     free_node(ast);
-    // TODO: free globals
+
     return 0;
 }

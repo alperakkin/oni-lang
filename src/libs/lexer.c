@@ -118,6 +118,14 @@ void print_token(Token *token)
     {
         printf("TOKEN [COMPARISON] -> %s\n", symbol);
     }
+    else if (token->type == TK_BOOL)
+    {
+        printf("TOKEN [BOOL] -> %s\n", symbol);
+    }
+    else if (token->type == TK_NULL)
+    {
+        printf("TOKEN [NULL] -> %s\n", "null");
+    }
     else
     {
         printf("Unexpected TOKEN!!\n");
@@ -257,6 +265,19 @@ void handle_identifier(const char *source, int *cursor, Token **head)
     char *name = strndup(&source[start], len);
 
     TokenValue val = {0};
+    if (strcmp(name, "true") == 0 || strcmp(name, "false") == 0)
+    {
+        val.bool_val = strcmp(name, "true") == 0 ? 1 : 0;
+        append_token(head, TK_BOOL, val, name);
+        return;
+    }
+    else if (strcmp(name, "null") == 0)
+    {
+        val.null_val = true;
+        append_token(head, TK_NULL, val, name);
+        return;
+    }
+
     val.identifier = name;
 
     append_token(head, TK_IDENTIFIER, val, name);

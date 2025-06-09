@@ -8,26 +8,34 @@ BuiltinFunction builtin_func[] = {
 
 Value builtin_print(Value *args, int arg_count)
 {
+
     for (int i = 0; i < arg_count; ++i)
     {
-        if (args[i].type == VALUE_INT)
+        switch (args[i].type)
         {
+        case VALUE_INT:
             printf("%d", args[i].int_val);
-        }
-        else if (args[i].type == VALUE_FLOAT)
-        {
+            break;
+        case VALUE_FLOAT:
             printf("%f", args[i].float_val);
-        }
-        else if (args[i].type == VALUE_STRING)
-        {
+            break;
+        case VALUE_STRING:
             printf("%s", args[i].str_val);
+            break;
+        case VALUE_BOOL:
+            printf("%s", args[i].bool_val == 1 ? "true" : "false");
+            break;
+        case VALUE_NULL:
+            printf("\n");
+            break;
+        default:
+            break;
         }
-
         printf(" ");
     }
     printf("\n");
     Value v;
-    v.type = VALUE_NONE;
+    v.type = VALUE_NULL;
     return v;
 }
 

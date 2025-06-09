@@ -1,10 +1,13 @@
 #pragma once
+#include <stdbool.h>
 
 typedef enum
 {
     VARIABLE_STR,
     VARIABLE_INT,
-    VARIABLE_FLOAT
+    VARIABLE_FLOAT,
+    VARIABLE_BOOL,
+    VARIABLE_NULL
 } VariableType;
 
 typedef struct
@@ -14,6 +17,8 @@ typedef struct
     union
     {
         int int_value;
+        bool bool_value;
+        bool null_value;
         float float_value;
         char *string_value;
     };

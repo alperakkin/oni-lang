@@ -12,7 +12,6 @@ void add_variable(GlobalScope *scope, Variable var)
         fprintf(stderr, "Memory allocation failed in add_variable\n");
         exit(1);
     }
-    // printf("Name: %s, ValType: %u, Val:%d\n", var.name, var.type, var.int_value);
 
     scope->variables = new_vars;
     scope->variables[scope->count].type = var.type;
@@ -28,6 +27,15 @@ void add_variable(GlobalScope *scope, Variable var)
     case VARIABLE_STR:
         scope->variables[scope->count].string_value = strdup(var.string_value);
         break;
+    case VARIABLE_BOOL:
+        printf("scope length: %d - var name: %s - bool: %d\n", scope->count, var.name, var.bool_value);
+        scope->variables[scope->count].bool_value = var.bool_value;
+        break;
+    case VARIABLE_NULL:
+        scope->variables[scope->count].null_value = var.null_value;
+        break;
+    default:
+        raise_error("Can not assign variable", var.name);
     }
     scope->count++;
 }
@@ -77,6 +85,11 @@ void print_globals(GlobalScope *scope)
         {
             printf("    %s (int): ", var.name);
             printf("%d,\n", var.int_value);
+        }
+        else if (var.type == VARIABLE_BOOL)
+        {
+            printf("    %s (bool): ", var.name);
+            printf("%s,\n", var.bool_value == 1 ? "true" : "false");
         }
     }
     printf("}\n");

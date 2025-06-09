@@ -19,6 +19,7 @@ typedef enum
     NODE_BLOCK,
     NODE_VARIABLE,
     NODE_NULL,
+    NODE_BOOL,
 } NodeType;
 
 typedef enum
@@ -34,8 +35,12 @@ struct Node
     {
         struct
         {
-            char *value;
+            bool value;
         } null;
+        struct
+        {
+            bool value;
+        } boolean;
         struct
         {
             int int_value;

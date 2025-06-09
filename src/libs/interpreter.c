@@ -9,7 +9,7 @@
 Value interpret(Node *node, GlobalScope *globals)
 {
     Value result;
-    result.type = VALUE_NONE;
+    result.type = VALUE_NULL;
 
     if (node == NULL)
         raise_error("There is unknown eval node", "");
@@ -52,6 +52,12 @@ Value interpret(Node *node, GlobalScope *globals)
                 break;
             case VALUE_STRING:
                 globals->variables[index].string_value = strdup(right.str_val);
+                break;
+            case VALUE_BOOL:
+                globals->variables[index].bool_value = right.bool_val;
+                break;
+            case VALUE_NULL:
+                globals->variables[index].null_value = right.null_val;
                 break;
             default:
                 break;
@@ -147,6 +153,12 @@ Value interpret(Node *node, GlobalScope *globals)
             result.float_val = var.float_value;
             return result;
         }
+        if (var.type == VARIABLE_BOOL)
+        {
+            result.type = VALUE_BOOL;
+            result.bool_val = var.bool_value;
+            return result;
+        }
         if (var.type == VARIABLE_STR)
         {
             result.type = VALUE_STRING;
@@ -188,8 +200,26 @@ Value interpret(Node *node, GlobalScope *globals)
             var.float_value = float_val;
             var.type = VARIABLE_FLOAT;
         }
+        if (strcmp(node->variable.type, "bool") == 0)
+        {
+            var.type = VARIABLE_BOOL;
+            var.bool_value = right.bool_val;
+        }
         add_variable(globals, var);
+
         return result;
+    case NODE_NULL:
+    {
+        result.type = VALUE_NULL;
+        result.null_val = node->null.value;
+        return result;
+    }
+    case NODE_BOOL:
+    {
+        result.type = VALUE_BOOL;
+        result.bool_val = node->boolean.value;
+        return result;
+    }
     default:
         printf("Node Type %d\n", node->type);
         raise_error("Error: unsupported node type", "");
@@ -204,9 +234,11 @@ void print_value(Value v)
     case VALUE_INT:
         printf("%d\n", v.int_val);
         break;
-    case VALUE_NONE:
+    case VALUE_NULL:
         printf("\n");
         break;
+    case VALUE_BOOL:
+        printf("%s", v.bool_val == true ? "true" : false);
     case VALUE_STRING:
         printf("%d\n", v.int_val);
         break;

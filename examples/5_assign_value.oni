@@ -1,5 +1,8 @@
 int x = 1
+bool y = false
 
 x = x+2
-
+y=true
 print(x+2)
+print(y)
+print(x)

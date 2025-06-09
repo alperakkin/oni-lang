@@ -42,7 +42,7 @@ bool is_variable(Token *token)
 {
     char *identifier = token->value.identifier;
 
-    char *var_list[] = {"int", "float", "str"};
+    char *var_list[] = {"int", "float", "str", "bool"};
     size_t var_len = sizeof(var_list) / sizeof(var_list[0]);
     for (size_t i = 0; i < var_len; i++)
     {
@@ -101,6 +101,22 @@ Node *parse_primary(Parser *parser)
         Node *node = malloc(sizeof(Node));
         node->type = NODE_STRING;
         node->string.value = strdup(token->value.text_val);
+        return node;
+    }
+    if (token->type == TK_BOOL)
+    {
+        advance(parser);
+        Node *node = malloc(sizeof(Node));
+        node->type = NODE_BOOL;
+        node->boolean.value = token->value.bool_val;
+        return node;
+    }
+    if (token->type == TK_NULL)
+    {
+        advance(parser);
+        Node *node = malloc(sizeof(Node));
+        node->type = NODE_NULL;
+        node->boolean.value = token->value.null_val;
         return node;
     }
 
@@ -332,7 +348,12 @@ void print_ast(Node *node, int level)
         printf("Variable: %s (%s) \n", node->variable.name, node->variable.type);
         print_ast(node->variable.value, level + 1);
         break;
-
+    case NODE_BOOL:
+        printf("Bool: %s\n", node->boolean.value == 1 ? "true" : "false");
+        break;
+    case NODE_NULL:
+        printf("Null\n");
+        break;
     default:
         printf(": %d\n", node->type);
         printf("Unknown node type\n");

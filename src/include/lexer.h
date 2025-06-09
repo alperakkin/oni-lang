@@ -31,6 +31,8 @@ typedef enum
 typedef union
 {
     int int_val;
+    bool bool_val;
+    bool null_val;
     float float_val;
     char *text_val;
     char *identifier;
