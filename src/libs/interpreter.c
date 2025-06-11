@@ -11,8 +11,9 @@ Value interpret(Node *node, GlobalScope *globals)
     Value result;
     result.type = VALUE_NULL;
 
-    if (node == NULL)
-        raise_error("There is unknown eval node", "");
+    // if (node == NULL)
+    //     raise_error("There is unknown eval node", "");
+
     switch (node->type)
     {
     case NODE_NUMBER:
@@ -180,6 +181,7 @@ Value interpret(Node *node, GlobalScope *globals)
         if (!node->variable.name)
             raise_error("Variable Name not assigned", "");
         var.name = strdup(node->variable.name);
+
         Value right = interpret(node->variable.value, globals);
 
         if (strcmp(node->variable.type, "int") == 0)

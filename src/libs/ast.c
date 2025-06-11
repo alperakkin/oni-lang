@@ -211,8 +211,9 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
     }
     else
     {
-        Node *assigned_val = malloc(sizeof(Node));
+        assigned_val = malloc(sizeof(Node));
         assigned_val->type = NODE_NULL;
+        assigned_val->null.value = true;
     }
 
     Node *variable_node = malloc(sizeof(Node));
