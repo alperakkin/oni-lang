@@ -89,6 +89,26 @@ void print_token(Token *token)
     {
         printf("TOKEN [RIGHT PARANTHESIS] -> )\n");
     }
+    else if (token->type == TK_L_SQUARE)
+    {
+        printf("TOKEN [LEFT SQUARE] -> [\n");
+    }
+    else if (token->type == TK_R_SQUARE)
+    {
+        printf("TOKEN [RIGHT SQUARE] -> ]\n");
+    }
+    else if (token->type == TK_LT)
+    {
+        printf("TOKEN [LESS THAN] -> <\n");
+    }
+    else if (token->type == TK_GT)
+    {
+        printf("TOKEN [GRATER THAN] -> >\n");
+    }
+    else if (token->type == TK_COMMA)
+    {
+        printf("TOKEN [COMMA] -> ,\n");
+    }
     else if (token->type == TK_BAD)
     {
         printf("Undefined Token -> %s\n", symbol);
@@ -185,11 +205,19 @@ void handle_plus(int *cursor, Token **head)
     (*cursor)++;
     append_token(head, TK_PLUS, (TokenValue){0}, "+\0");
 }
-void handle_minus(int *cursor, Token **head)
+void handle_minus(const char *source, int *cursor, Token **head)
 {
+    if (source[*cursor++] == '>')
+    {
+        (*cursor)++;
+        append_token(head, TK_PUSH, (TokenValue){0}, "-\0");
+    }
+    else
+    {
 
-    (*cursor)++;
-    append_token(head, TK_MINUS, (TokenValue){0}, "-\0");
+        (*cursor)++;
+        append_token(head, TK_MINUS, (TokenValue){0}, "-\0");
+    }
 }
 void handle_star(int *cursor, Token **head)
 {
@@ -309,7 +337,7 @@ Token *tokenize(const char *source)
         }
         else if (current_char == '-')
         {
-            handle_minus(&cursor, &head);
+            handle_minus(source, &cursor, &head);
         }
         else if (current_char == '*')
         {
@@ -334,6 +362,17 @@ Token *tokenize(const char *source)
             append_token(&head, TK_NEW_LINE, (TokenValue){0}, &current_char);
             cursor++;
         }
+        else if (current_char == '<')
+        {
+
+            append_token(&head, TK_LT, (TokenValue){0}, &current_char);
+            cursor++;
+        }
+        else if (current_char == '>')
+        {
+            append_token(&head, TK_GT, (TokenValue){0}, &current_char);
+            cursor++;
+        }
         else if (current_char == '(')
         {
             append_token(&head, TK_L_PAREN, (TokenValue){0}, &current_char);
@@ -342,6 +381,21 @@ Token *tokenize(const char *source)
         else if (current_char == ')')
         {
             append_token(&head, TK_R_PAREN, (TokenValue){0}, &current_char);
+            cursor++;
+        }
+        else if (current_char == '[')
+        {
+            append_token(&head, TK_L_SQUARE, (TokenValue){0}, &current_char);
+            cursor++;
+        }
+        else if (current_char == ']')
+        {
+            append_token(&head, TK_R_SQUARE, (TokenValue){0}, &current_char);
+            cursor++;
+        }
+        else if (current_char == ',')
+        {
+            append_token(&head, TK_COMMA, (TokenValue){0}, &current_char);
             cursor++;
         }
 

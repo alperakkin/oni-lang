@@ -1,4 +1,0 @@
-int x
-x=null
-x=4
-print(x)
