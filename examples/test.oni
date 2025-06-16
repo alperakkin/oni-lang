@@ -1,5 +1,4 @@
 int x
-
-x=6
-
+x=null
+x=4
 print(x)

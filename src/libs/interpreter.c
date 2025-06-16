@@ -47,18 +47,22 @@ Value interpret(Node *node, GlobalScope *globals)
             {
             case VALUE_FLOAT:
                 globals->variables[index].float_value = right.float_val;
+                globals->variables[index].type = VARIABLE_FLOAT;
                 break;
             case VALUE_INT:
                 globals->variables[index].int_value = right.int_val;
+                globals->variables[index].type = VARIABLE_INT;
                 break;
             case VALUE_STRING:
                 globals->variables[index].string_value = strdup(right.str_val);
+                globals->variables[index].type = VARIABLE_STR;
                 break;
             case VALUE_BOOL:
                 globals->variables[index].bool_value = right.bool_val;
+                globals->variables[index].type = VARIABLE_BOOL;
                 break;
             case VALUE_NULL:
-                globals->variables[index].null_value = right.null_val;
+                globals->variables[index].type = VARIABLE_NULL;
                 break;
             default:
                 break;
@@ -146,6 +150,7 @@ Value interpret(Node *node, GlobalScope *globals)
 
             result.type = VALUE_INT;
             result.int_val = var.int_value;
+
             return result;
         }
         if (var.type == VARIABLE_FLOAT)
@@ -167,6 +172,10 @@ Value interpret(Node *node, GlobalScope *globals)
 
             return result;
         }
+        if (var.type == VARIABLE_NULL)
+        {
+            result.type = VALUE_NULL;
+        }
         return result;
     }
     case NODE_STRING:
@@ -186,9 +195,18 @@ Value interpret(Node *node, GlobalScope *globals)
 
         if (strcmp(node->variable.type, "int") == 0)
         {
-            int int_val = right.type == VALUE_FLOAT ? (int)right.float_val : right.int_val;
-            var.int_value = int_val;
-            var.type = VARIABLE_INT;
+
+            {
+
+                if (right.type == VALUE_NULL)
+                    var.type = VARIABLE_NULL;
+                else
+                {
+
+                    var.int_value = right.type == VALUE_FLOAT ? (int)right.float_val : right.int_val;
+                    var.type = VARIABLE_INT;
+                }
+            }
         }
         if (strcmp(node->variable.type, "str") == 0)
         {
@@ -231,10 +249,19 @@ Value interpret(Node *node, GlobalScope *globals)
 
 void print_value(Value v)
 {
+    printf("Test int:%d null:%d\n", v.int_val, v.null_val);
+    if (v.null_val == true)
+    {
+        printf("<null>\n");
+        return;
+    }
     switch (v.type)
     {
     case VALUE_INT:
         printf("%d\n", v.int_val);
+        break;
+    case VALUE_FLOAT:
+        printf("%f\n", v.float_val);
         break;
     case VALUE_NULL:
         printf("\n");
@@ -242,7 +269,7 @@ void print_value(Value v)
     case VALUE_BOOL:
         printf("%s", v.bool_val == true ? "true" : false);
     case VALUE_STRING:
-        printf("%d\n", v.int_val);
+        printf("%s\n", v.str_val);
         break;
     default:
         printf("<unknown value>\n");

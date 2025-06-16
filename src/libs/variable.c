@@ -32,7 +32,6 @@ void add_variable(GlobalScope *scope, Variable var)
         scope->variables[scope->count].bool_value = var.bool_value;
         break;
     case VARIABLE_NULL:
-        scope->variables[scope->count].null_value = var.null_value;
         break;
     default:
         raise_error("Can not assign variable", var.name);
@@ -90,6 +89,11 @@ void print_globals(GlobalScope *scope)
         {
             printf("    %s (bool): ", var.name);
             printf("%s,\n", var.bool_value == 1 ? "true" : "false");
+        }
+        else if (var.type == VARIABLE_NULL)
+        {
+            printf("    %s (null): ", var.name);
+            printf("%s,\n", "<null>");
         }
     }
     printf("}\n");

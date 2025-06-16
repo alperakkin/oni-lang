@@ -219,7 +219,7 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
     Node *variable_node = malloc(sizeof(Node));
 
     variable_node->type = NODE_VARIABLE;
-    variable_node->variable.local = false;
+
     variable_node->variable.name = var_name->value.identifier;
     variable_node->variable.value = assigned_val;
     variable_node->variable.type = identifier_token->value.identifier;

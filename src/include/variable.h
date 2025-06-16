@@ -18,7 +18,6 @@ typedef struct
     {
         int int_value;
         bool bool_value;
-        bool null_value;
         float float_value;
         char *string_value;
     };

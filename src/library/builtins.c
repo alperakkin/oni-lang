@@ -11,6 +11,7 @@ Value builtin_print(Value *args, int arg_count)
 
     for (int i = 0; i < arg_count; ++i)
     {
+
         switch (args[i].type)
         {
         case VALUE_INT:
@@ -26,7 +27,7 @@ Value builtin_print(Value *args, int arg_count)
             printf("%s", args[i].bool_val == 1 ? "true" : "false");
             break;
         case VALUE_NULL:
-            printf("\n");
+            printf("<null>\n");
             break;
         default:
             break;
