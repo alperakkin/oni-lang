@@ -1,15 +1,23 @@
 #pragma once
 #include <stdbool.h>
-
+#include "value.h"
 typedef enum
 {
     VARIABLE_STR,
     VARIABLE_INT,
     VARIABLE_FLOAT,
     VARIABLE_BOOL,
-    VARIABLE_NULL
+    VARIABLE_NULL,
+    VARIABLE_ARRAY,
 } VariableType;
 
+typedef struct
+{
+    int **int_array;
+    float **float_array;
+    char **string_array;
+    bool **boolean_array;
+} VariableArray;
 typedef struct
 {
     char *name;
@@ -20,6 +28,7 @@ typedef struct
         bool bool_value;
         float float_value;
         char *string_value;
+        ValueArray array_value;
     };
 } Variable;
 

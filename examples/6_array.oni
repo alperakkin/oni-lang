@@ -1,3 +1,5 @@
-arr<int>  x = [1,2]
+arr<int>  x = [1,2,3]
+print(x)
 
-
+arr<str> y = ["foo","bar"]
+print(y)

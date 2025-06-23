@@ -1,5 +1,7 @@
+// value.h
 #pragma once
 #include <stdbool.h>
+
 typedef enum
 {
     VALUE_INT,
@@ -7,10 +9,21 @@ typedef enum
     VALUE_FLOAT,
     VALUE_VARIABLE,
     VALUE_BOOL,
-    VALUE_NULL
+    VALUE_NULL,
+    VALUE_ARRAY,
 } ValueType;
 
-typedef struct
+typedef struct Value Value;
+
+typedef struct ValueArray
+{
+    Value **elements;
+    int length;
+    int capacity;
+    char *generic_type;
+} ValueArray;
+
+struct Value
 {
     ValueType type;
     union
@@ -20,5 +33,6 @@ typedef struct
         float float_val;
         bool bool_val;
         bool null_val;
+        ValueArray array_val;
     };
-} Value;
+};

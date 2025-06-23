@@ -5,6 +5,8 @@
 #include "utils.h"
 #include "variable.h"
 
+#define INITIAL_ARRAY_CAPACITY 4
+
 static Token *advance(Parser *parser);
 static Node *parse_primary(Parser *parser);
 
@@ -42,7 +44,7 @@ bool is_variable(Token *token)
 {
     char *identifier = token->value.identifier;
 
-    char *var_list[] = {"int", "float", "str", "bool"};
+    char *var_list[] = {"int", "float", "str", "bool", "arr"};
     size_t var_len = sizeof(var_list) / sizeof(var_list[0]);
     for (size_t i = 0; i < var_len; i++)
     {
@@ -131,7 +133,7 @@ Node *parse_primary(Parser *parser)
         {
             return parse_function_call(parser, identifier_token);
         }
-        else if (is_variable(identifier_token))
+        else if (is_variable(identifier_token) && next && next->type != TK_GT)
         {
             return parse_variable(parser, identifier_token);
         }
@@ -191,10 +193,165 @@ Node *parse_expression(Parser *parser, int min_precedence)
 
     return left;
 }
+Node *create_node_array(char *generic_type)
+{
+
+    Node *node = malloc(sizeof(Node));
+    node->type = NODE_ARRAY;
+    node->array.capacity = INITIAL_ARRAY_CAPACITY;
+    node->array.length = 0;
+    node->array.elements = malloc(sizeof(Node *) * node->array.capacity);
+    node->array.generic_type = strdup(generic_type);
+    return node;
+}
+
+void node_array_push(Node *array_node, Node *element)
+{
+    if (array_node->type != NODE_ARRAY)
+        raise_error("Internal error: node_array_push on non-array node", "");
+
+    if (array_node->array.length >= array_node->array.capacity)
+    {
+        array_node->array.capacity *= 2;
+        array_node->array.elements = realloc(
+            array_node->array.elements,
+            sizeof(Node *) * array_node->array.capacity);
+
+        if (!array_node->array.elements)
+            raise_error("Memory allocation failed during array growth", "");
+    }
+
+    array_node->array.elements[array_node->array.length++] = element;
+}
+
+Node *parse_array_literal(Parser *parser, char *generic_type)
+{
+
+    if (parser->current == NULL || parser->current->type != TK_L_SQUARE)
+        raise_error("Expected '[' to start array literal", parser->current ? parser->current->symbol : "");
+
+    advance(parser);
+
+    Node *node_array = create_node_array(generic_type);
+
+    while (parser->current && parser->current->type != TK_R_SQUARE)
+    {
+        while (parser->current &&
+               (parser->current->type == TK_SPACE || parser->current->type == TK_NEW_LINE || parser->current->type == TK_COMMENT))
+        {
+            advance(parser);
+        }
+
+        if (!parser->current)
+            raise_error("Unexpected end of input in array literal", "");
+
+        Node *element = NULL;
+        Token *tok = parser->current;
+
+        if (strcmp(generic_type, "int") == 0)
+        {
+            if (tok->type != TK_INTEGER)
+                raise_error("Expected integer in int[]", tok->symbol);
+
+            element = malloc(sizeof(Node));
+            element->type = NODE_NUMBER;
+            element->number.int_value = tok->value.int_val;
+            element->number.type = NODE_INTEGER;
+        }
+        else if (strcmp(generic_type, "float") == 0)
+        {
+            if (tok->type != TK_FLOAT)
+                raise_error("Expected float in float[]", tok->symbol);
+
+            element = malloc(sizeof(Node));
+            element->type = NODE_NUMBER;
+            element->number.float_value = tok->value.float_val;
+            element->number.type = NODE_FLOAT;
+        }
+        else if (strcmp(generic_type, "str") == 0)
+        {
+            if (tok->type != TK_STRING)
+                raise_error("Expected string in str[]", tok->symbol);
+
+            element = malloc(sizeof(Node));
+            element->type = NODE_STRING;
+            element->string.value = strdup(tok->value.text_val);
+        }
+        else if (strcmp(generic_type, "bool") == 0)
+        {
+            if (tok->type != TK_BOOL)
+                raise_error("Expected boolean in bool[]", tok->symbol);
+
+            element = malloc(sizeof(Node));
+            element->type = NODE_BOOL;
+            element->boolean.value = tok->value.bool_val;
+        }
+        else if (strcmp(generic_type, "null") == 0)
+        {
+            if (tok->type != TK_NULL)
+                raise_error("Expected null in null[]", tok->symbol);
+
+            element = malloc(sizeof(Node));
+            element->type = NODE_NULL;
+            element->null.value = true;
+        }
+        else
+        {
+            raise_error("Unknown generic type for array", generic_type);
+        }
+
+        node_array_push(node_array, element);
+        advance(parser);
+
+        while (parser->current &&
+               (parser->current->type == TK_SPACE || parser->current->type == TK_NEW_LINE || parser->current->type == TK_COMMENT))
+        {
+            advance(parser);
+        }
+
+        if (parser->current && parser->current->type == TK_COMMA)
+        {
+            advance(parser);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (!parser->current || parser->current->type != TK_R_SQUARE)
+        raise_error("Expected ']' to close array literal", parser->current ? parser->current->symbol : "");
+
+    advance(parser);
+    return node_array;
+}
 
 Node *parse_variable(Parser *parser, Token *identifier_token)
 {
+    char *generic_type = NULL;
+
+    if (strcmp(identifier_token->symbol, "arr") == 0)
+    {
+        advance(parser);
+        if (parser->current->type != TK_LT)
+            raise_error("Generic type must be provided", "");
+
+        advance(parser);
+        if (parser->current->type != TK_IDENTIFIER)
+            raise_error("Expected identifier inside '<>' for generic type", parser->current->symbol);
+
+        generic_type = strdup(parser->current->value.identifier);
+
+        advance(parser);
+        if (parser->current->type != TK_GT)
+            raise_error("Generic type must be closed by '>", "");
+    }
+    else
+    {
+        generic_type = strdup(identifier_token->value.identifier);
+    }
     advance(parser);
+
     Token *token = parser->current;
     if (token->type != TK_IDENTIFIER)
         raise_error("Variable name not provided", token->symbol);
@@ -203,11 +360,24 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
 
     advance(parser);
     token = parser->current;
+
     Node *assigned_val = NULL;
     if (token->type == TK_ASSIGN)
     {
         advance(parser);
-        assigned_val = parse_expression(parser, 0);
+
+        if (parser->current->type == TK_L_SQUARE)
+        {
+            if (generic_type == NULL)
+                raise_error("Undefined generic type", "");
+
+            assigned_val = parse_array_literal(parser, generic_type);
+        }
+        else
+        {
+
+            assigned_val = parse_expression(parser, 0);
+        }
     }
     else
     {
@@ -223,7 +393,7 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
     variable_node->variable.name = var_name->value.identifier;
     variable_node->variable.value = assigned_val;
     variable_node->variable.type = identifier_token->value.identifier;
-
+    variable_node->variable.generic_type = generic_type;
     return variable_node;
 }
 
@@ -352,6 +522,8 @@ void print_ast(Node *node, int level)
     case NODE_BOOL:
         printf("Bool: %s\n", node->boolean.value == 1 ? "true" : "false");
         break;
+    case NODE_ARRAY:
+        printf("Array: %d elements\n", node->array.length);
     case NODE_NULL:
         printf("Null\n");
         break;

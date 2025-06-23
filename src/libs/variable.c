@@ -31,6 +31,49 @@ void add_variable(GlobalScope *scope, Variable var)
         printf("scope length: %d - var name: %s - bool: %d\n", scope->count, var.name, var.bool_value);
         scope->variables[scope->count].bool_value = var.bool_value;
         break;
+    case VARIABLE_ARRAY:
+        scope->variables[scope->count].array_value.length = var.array_value.length;
+        scope->variables[scope->count].array_value.capacity = var.array_value.capacity;
+        scope->variables[scope->count].array_value.generic_type = strdup(var.array_value.generic_type);
+        int len = var.array_value.length;
+        scope->variables[scope->count].array_value.elements = malloc(sizeof(var.array_value) * len);
+        if (scope->variables[scope->count].array_value.elements == NULL)
+            raise_error("Memory allocation failed for array elements\n", "");
+
+        for (int i = 0; i < len; i++)
+        {
+            Value *src_val = var.array_value.elements[i];
+
+            Value *new_val = malloc(sizeof(Value));
+            if (!new_val)
+                raise_error("Memory allocation failed for array element\n", "");
+
+            *new_val = *src_val;
+
+            if (new_val->type == VALUE_STRING)
+            {
+                new_val->str_val = strdup(src_val->str_val);
+            }
+            else if (new_val->type == VALUE_INT)
+            {
+                new_val->int_val = src_val->int_val;
+            }
+            else if (new_val->type == VALUE_FLOAT)
+            {
+                new_val->float_val = src_val->float_val;
+            }
+            else if (new_val->type == VALUE_BOOL)
+            {
+                new_val->bool_val = src_val->bool_val;
+            }
+            else if (new_val->type == VALUE_ARRAY)
+            {
+                // TODO: multidimensional arrays will be defined here
+            }
+            scope->variables[scope->count]
+                .array_value.elements[i] = new_val;
+        }
+        break;
     case VARIABLE_NULL:
         break;
     default:
