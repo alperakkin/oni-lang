@@ -135,6 +135,7 @@ Node *parse_primary(Parser *parser)
         }
         else if (is_variable(identifier_token) && next && next->type != TK_GT)
         {
+
             return parse_variable(parser, identifier_token);
         }
 
@@ -353,6 +354,7 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
     advance(parser);
 
     Token *token = parser->current;
+
     if (token->type != TK_IDENTIFIER)
         raise_error("Variable name not provided", token->symbol);
     Token *var_name = token;
@@ -394,6 +396,7 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
     variable_node->variable.value = assigned_val;
     variable_node->variable.type = identifier_token->value.identifier;
     variable_node->variable.generic_type = generic_type;
+
     return variable_node;
 }
 
