@@ -133,6 +133,7 @@ Node *parse_primary(Parser *parser)
         {
             return parse_function_call(parser, identifier_token);
         }
+
         else if (is_variable(identifier_token) && next && next->type != TK_GT)
         {
 
@@ -181,6 +182,7 @@ Node *parse_expression(Parser *parser, int min_precedence)
             break;
 
         advance(parser);
+
         Node *right = parse_expression(parser, precedence + 1);
 
         Node *bin_op = malloc(sizeof(Node));
@@ -349,8 +351,10 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
     }
     else
     {
+
         generic_type = strdup(identifier_token->value.identifier);
     }
+
     advance(parser);
 
     Token *token = parser->current;
@@ -480,7 +484,7 @@ void free_node(Node *node)
     free(node);
 }
 
-void print_ast(Node *node, int level)
+void print_node(Node *node, int level)
 {
     if (!node)
         return;
@@ -508,19 +512,19 @@ void print_ast(Node *node, int level)
         printf("BinaryOp: %s\n",
                node->binary_op.token->symbol);
 
-        print_ast(node->binary_op.left, level + 1);
-        print_ast(node->binary_op.right, level + 1);
+        print_node(node->binary_op.left, level + 1);
+        print_node(node->binary_op.right, level + 1);
         break;
 
     case NODE_FUNCTION_CALL:
         printf("FunctionCall: %s\n", "->");
 
-        print_ast(node->func_call.left, level + 1);
-        print_ast(node->func_call.right, level + 1);
+        print_node(node->func_call.left, level + 1);
+        print_node(node->func_call.right, level + 1);
         break;
     case NODE_VARIABLE:
         printf("Variable: %s (%s) \n", node->variable.name, node->variable.type);
-        print_ast(node->variable.value, level + 1);
+        print_node(node->variable.value, level + 1);
         break;
     case NODE_BOOL:
         printf("Bool: %s\n", node->boolean.value == 1 ? "true" : "false");
@@ -536,10 +540,10 @@ void print_ast(Node *node, int level)
     }
 }
 
-void print_ast_block(NodeBlock *block)
+void print_node_block(NodeBlock *block)
 {
     for (int i = 0; i < block->count; i++)
     {
-        print_ast(block->statements[i], 0);
+        print_node(block->statements[i], 0);
     }
 }

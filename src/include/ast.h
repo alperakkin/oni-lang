@@ -118,5 +118,5 @@ Node *parse_variable(Parser *parser, Token *identifier_token);
 Node *parse_function_call(Parser *parser, Token *identifier_token);
 Node *parse_array_literal(Parser *parser, char *generic_type);
 void free_node(Node *node);
-void print_ast(Node *node, int level);
-void print_ast_block(NodeBlock *block);
+void print_node(Node *node, int level);
+void print_node_block(NodeBlock *block);
