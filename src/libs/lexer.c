@@ -97,6 +97,14 @@ void print_token(Token *token)
     {
         printf("TOKEN [RIGHT SQUARE] -> ]\n");
     }
+    else if (token->type == TK_L_CURL)
+    {
+        printf("TOKEN [LEFT CURL] -> {\n");
+    }
+    else if (token->type == TK_R_CURL)
+    {
+        printf("TOKEN [RIGHT CURL] -> }\n");
+    }
     else if (token->type == TK_LT)
     {
         printf("TOKEN [LESS THAN] -> <\n");
@@ -104,6 +112,14 @@ void print_token(Token *token)
     else if (token->type == TK_GT)
     {
         printf("TOKEN [GRATER THAN] -> >\n");
+    }
+    else if (token->type == TK_LTE)
+    {
+        printf("TOKEN [LESS THAN OR EQUAL] -> <\n");
+    }
+    else if (token->type == TK_GTE)
+    {
+        printf("TOKEN [GRATER THAN OR EQUAL] -> >\n");
     }
     else if (token->type == TK_COMMA)
     {
@@ -134,13 +150,25 @@ void print_token(Token *token)
     {
         printf("TOKEN [ASSIGN] -> %s\n", symbol);
     }
-    else if (token->type == TK_COMP)
-    {
-        printf("TOKEN [COMPARISON] -> %s\n", symbol);
-    }
     else if (token->type == TK_BOOL)
     {
         printf("TOKEN [BOOL] -> %s\n", symbol);
+    }
+    else if (token->type == TK_IF)
+    {
+        printf("TOKEN [IF] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_ELSE)
+    {
+        printf("TOKEN [ELSE] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_EQ)
+    {
+        printf("TOKEN [CMP EQUAL] -> %s\n", symbol);
+    }
+    else if (token->type == TK_NEQ)
+    {
+        printf("TOKEN [CMP NOT EQUAL] -> %s\n", symbol);
     }
     else if (token->type == TK_NULL)
     {
@@ -275,7 +303,10 @@ void handle_equals(const char *source, int *cursor, Token **head)
     (*cursor)++;
 
     if (source[*cursor] == '=')
-        append_token(head, TK_COMP, (TokenValue){0}, "==");
+    {
+        append_token(head, TK_EQ, (TokenValue){0}, "==");
+        (*cursor)++;
+    }
     else
         append_token(head, TK_ASSIGN, (TokenValue){0}, "=");
 }
@@ -303,6 +334,17 @@ void handle_identifier(const char *source, int *cursor, Token **head)
     {
         val.null_val = true;
         append_token(head, TK_NULL, val, name);
+        return;
+    }
+    else if (strcmp(name, "if") == 0)
+    {
+        append_token(head, TK_IF, (TokenValue){0}, name);
+        return;
+    }
+
+    else if (strcmp(name, "else") == 0)
+    {
+        append_token(head, TK_ELSE, (TokenValue){0}, name);
         return;
     }
 
@@ -391,6 +433,16 @@ Token *tokenize(const char *source)
         else if (current_char == ']')
         {
             append_token(&head, TK_R_SQUARE, (TokenValue){0}, &current_char);
+            cursor++;
+        }
+        else if (current_char == '{')
+        {
+            append_token(&head, TK_L_CURL, (TokenValue){0}, &current_char);
+            cursor++;
+        }
+        else if (current_char == '}')
+        {
+            append_token(&head, TK_R_CURL, (TokenValue){0}, &current_char);
             cursor++;
         }
         else if (current_char == ',')

@@ -23,14 +23,22 @@ typedef enum
     TK_R_PAREN,
     TK_L_SQUARE,
     TK_R_SQUARE,
+    TK_L_CURL,
+    TK_R_CURL,
     TK_LT,
+    TK_LTE,
     TK_GT,
+    TK_GTE,
     TK_PUSH,
     TK_QUOTE,
     TK_STRING,
     TK_COMMENT,
     TK_COMP,
     TK_NULL,
+    TK_IF,
+    TK_ELSE,
+    TK_EQ,
+    TK_NEQ,
 } TokenType;
 
 typedef union

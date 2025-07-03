@@ -21,6 +21,7 @@ typedef enum
     NODE_NULL,
     NODE_BOOL,
     NODE_ARRAY,
+    NODE_IF,
 } NodeType;
 
 typedef enum
@@ -86,6 +87,14 @@ typedef struct
     bool local;
     Node *value;
 } NodeVariable;
+
+typedef struct
+{
+    Node *condition;
+    NodeBlock *if_block;
+    NodeBlock *else_block;
+} NodeIf;
+
 struct Node
 {
     NodeType type;
@@ -101,6 +110,7 @@ struct Node
         NodeVariable variable;
         NodeArray array;
         NodeBlock block;
+        NodeIf node_if;
     };
 };
 
@@ -117,6 +127,7 @@ void node_array_push(Node *array_node, Node *element);
 Node *parse_variable(Parser *parser, Token *identifier_token);
 Node *parse_function_call(Parser *parser, Token *identifier_token);
 Node *parse_array_literal(Parser *parser, char *generic_type);
+Node *parse_if_block(Parser *parser);
 void free_node(Node *node);
 void print_node(Node *node, int level);
 void print_node_block(NodeBlock *block);

@@ -9,6 +9,8 @@
 
 static Token *advance(Parser *parser);
 static Node *parse_primary(Parser *parser);
+static void skip_comment(Parser *parser);
+static void skip_new_line(Parser *parser);
 
 int get_precedence(TokenType type)
 {
@@ -38,6 +40,25 @@ static Token *advance(Parser *parser)
     }
 
     return parser->current;
+}
+void skip_new_line(Parser *parser)
+{
+    while (parser->current)
+    {
+        if (parser->current->type != TK_NEW_LINE)
+            break;
+        advance(parser);
+    }
+}
+
+void skip_comment(Parser *parser)
+{
+    while (parser->current)
+    {
+        if (parser->current->type != TK_COMMENT)
+            break;
+        advance(parser);
+    }
 }
 
 bool is_variable(Token *token)
@@ -75,6 +96,14 @@ Node *parse_primary(Parser *parser)
 
         advance(parser);
         return expr;
+    }
+    if (token->type == TK_L_CURL)
+    {
+        NodeBlock *block = parse(parser);
+        Node *node = malloc(sizeof(Node));
+        node->type = NODE_BLOCK;
+        node->block = *block;
+        return node;
     }
 
     if (token->type == TK_INTEGER)
@@ -120,6 +149,10 @@ Node *parse_primary(Parser *parser)
         node->type = NODE_NULL;
         node->boolean.value = token->value.null_val;
         return node;
+    }
+    if (token->type == TK_IF)
+    {
+        return parse_if_block(parser);
     }
 
     if (token->type == TK_IDENTIFIER)
@@ -175,7 +208,7 @@ Node *parse_expression(Parser *parser, int min_precedence)
         if (token->type == TK_NEW_LINE || token->type == TK_EOF || token->type == TK_COMMENT)
             break;
 
-        if (token->type == TK_R_PAREN)
+        if (token->type == TK_R_PAREN || token->type == TK_R_CURL || token->type == TK_L_CURL)
             break;
         int precedence = get_precedence(token->type);
         if (precedence < min_precedence)
@@ -190,10 +223,8 @@ Node *parse_expression(Parser *parser, int min_precedence)
         bin_op->binary_op.left = left;
         bin_op->binary_op.right = right;
         bin_op->binary_op.token = token;
-
         left = bin_op;
     }
-
     return left;
 }
 Node *create_node_array(char *generic_type)
@@ -436,6 +467,51 @@ Node *parse_function_call(Parser *parser, Token *identifier_token)
     return func_call;
 }
 
+Node *parse_if_block(Parser *parser)
+{
+    advance(parser);
+    Node *condition = parse_expression(parser, 0);
+    skip_comment(parser);
+    skip_new_line(parser);
+    if (!parser->current || parser->current->type != TK_L_CURL)
+        raise_error("Expected '{' before if block", "");
+    advance(parser);
+    NodeBlock *if_block = parse(parser);
+
+    if (!parser->current || parser->current->type != TK_R_CURL)
+        raise_error("Expected '}' after if block", "");
+    advance(parser);
+    skip_comment(parser);
+    skip_new_line(parser);
+
+    Node *node = malloc(sizeof(Node));
+    node->type = NODE_IF;
+    node->node_if.condition = condition;
+    node->node_if.if_block = if_block;
+    node->node_if.else_block = NULL;
+
+    if (parser->current && parser->current->type == TK_ELSE)
+    {
+
+        advance(parser);
+        skip_comment(parser);
+        skip_new_line(parser);
+        if (!parser->current || parser->current->type != TK_L_CURL)
+            raise_error("Expected '{' before if block", "");
+
+        advance(parser);
+        NodeBlock *else_block = parse(parser);
+        if (!parser->current || parser->current->type != TK_R_CURL)
+            raise_error("Expected '}' after if block", "");
+        advance(parser);
+        skip_comment(parser);
+        skip_new_line(parser);
+        node->node_if.else_block = else_block;
+    }
+
+    return node;
+}
+
 NodeBlock *parse(Parser *parser)
 {
     NodeBlock *block = malloc(sizeof(NodeBlock));
@@ -443,6 +519,11 @@ NodeBlock *parse(Parser *parser)
     block->count = 0;
     while (parser->current != NULL)
     {
+        if (parser->current->type == TK_R_CURL)
+        {
+
+            break;
+        }
 
         if (parser->current->type == TK_NEW_LINE || parser->current->type == TK_COMMENT)
         {
@@ -451,6 +532,7 @@ NodeBlock *parse(Parser *parser)
         }
 
         Node *stmt = parse_expression(parser, 0);
+
         if (stmt != NULL)
         {
             block->count++;
@@ -496,6 +578,10 @@ void print_node(Node *node, int level)
 
     switch (node->type)
     {
+    case NODE_STRING:
+        printf("STRING: %s\n", node->string.value);
+        break;
+
     case NODE_NUMBER:
         if (node->number.type == NODE_INTEGER)
             printf("NUMBER (INT): %d\n", node->number.int_value);
@@ -531,6 +617,21 @@ void print_node(Node *node, int level)
         break;
     case NODE_ARRAY:
         printf("Array: %d elements\n", node->array.length);
+        break;
+    case NODE_IF:
+        printf("IF NODE: \n");
+        printf("Condition: \n");
+        print_node(node->node_if.condition, level + 1);
+        printf("Then: \n");
+        print_node_block(node->node_if.if_block);
+        if (node->node_if.else_block)
+        {
+
+            printf("Else: \n");
+            print_node_block(node->node_if.else_block);
+        }
+        break;
+
     case NODE_NULL:
         printf("Null\n");
         break;
