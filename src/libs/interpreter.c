@@ -70,6 +70,7 @@ Value interpret(Node *node, GlobalScope *globals)
             result.type = VALUE_INT;
             int l = left.int_val;
             int r = right.int_val;
+
             switch (node->binary_op.token->type)
             {
             case TK_PLUS:
@@ -83,6 +84,30 @@ Value interpret(Node *node, GlobalScope *globals)
                 break;
             case TK_SLASH:
                 result.int_val = l / r;
+                break;
+            case TK_GT:
+                result.type = VALUE_BOOL;
+                result.bool_val = l > r;
+                break;
+            case TK_GTE:
+                result.type = VALUE_BOOL;
+                result.bool_val = l >= r;
+                break;
+            case TK_LT:
+                result.type = VALUE_BOOL;
+                result.bool_val = l < r;
+                break;
+            case TK_LTE:
+                result.type = VALUE_BOOL;
+                result.bool_val = l <= r;
+                break;
+            case TK_EQ:
+                result.type = VALUE_BOOL;
+                result.bool_val = l == r;
+                break;
+            case TK_NEQ:
+                result.type = VALUE_BOOL;
+                result.bool_val = l != r;
                 break;
             default:
                 raise_error("Unknown binary operator", "");
@@ -107,11 +132,58 @@ Value interpret(Node *node, GlobalScope *globals)
             case TK_SLASH:
                 result.float_val = l / r;
                 break;
+            case TK_GT:
+                result.type = VALUE_BOOL;
+                result.bool_val = l > r;
+                break;
+            case TK_GTE:
+                result.type = VALUE_BOOL;
+                result.bool_val = l >= r;
+                break;
+            case TK_LT:
+                result.type = VALUE_BOOL;
+                result.bool_val = l < r;
+                break;
+            case TK_LTE:
+                result.type = VALUE_BOOL;
+                result.bool_val = l <= r;
+                break;
+            case TK_EQ:
+                result.type = VALUE_BOOL;
+                result.bool_val = l == r;
+                break;
+            case TK_NEQ:
+                result.type = VALUE_BOOL;
+                result.bool_val = l != r;
+                break;
             default:
                 raise_error("Unknown binary operator", "");
             }
         }
         return result;
+    }
+    case NODE_IF:
+    {
+
+        Value condition = interpret(node->node_if.condition, globals);
+        if (condition.bool_val == true)
+        {
+            for (int i = 0; i < node->node_if.if_block->count; i++)
+            {
+                result = interpret(node->node_if.if_block->statements[i], globals);
+            }
+        }
+        else
+        {
+            if (node->node_if.else_block)
+            {
+
+                for (int i = 0; i < node->node_if.else_block->count; i++)
+                {
+                    result = interpret(node->node_if.else_block->statements[i], globals);
+                }
+            }
+        }
     }
 
     case NODE_ARRAY:
@@ -259,7 +331,8 @@ Value interpret(Node *node, GlobalScope *globals)
 
 void print_value(Value v)
 {
-    if (v.type == VALUE_NULL || v.null_val == true)
+
+    if (v.type == VALUE_NULL)
     {
         printf("<null>\n");
         return;

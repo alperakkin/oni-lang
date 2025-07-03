@@ -595,8 +595,8 @@ void print_node(Node *node, int level)
 
     case NODE_BINARY_OP:
 
-        printf("BinaryOp: %s\n",
-               node->binary_op.token->symbol);
+        printf("BinaryOp: ");
+        print_token(node->binary_op.token);
 
         print_node(node->binary_op.left, level + 1);
         print_node(node->binary_op.right, level + 1);
