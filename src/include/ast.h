@@ -14,6 +14,7 @@ typedef enum
     NODE_NUMBER,
     NODE_STRING,
     NODE_BINARY_OP,
+    NODE_UNARY_OP,
     NODE_FUNCTION_CALL,
     NODE_IDENTIFIER,
     NODE_BLOCK,
@@ -62,6 +63,11 @@ typedef struct
     Node *right;
     Token *token;
 } NodeBinaryOp;
+typedef struct
+{
+    Node *operand;
+    Token *token;
+} NodeUnaryOp;
 
 typedef struct
 {
@@ -104,6 +110,7 @@ struct Node
         NodeBoolean boolean;
         NodeNumber number;
         NodeBinaryOp binary_op;
+        NodeUnaryOp unary_op;
         NodeFuncCall func_call;
         NodeIdentifier identifier;
         NodeString string;

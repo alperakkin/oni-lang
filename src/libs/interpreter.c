@@ -29,6 +29,23 @@ Value interpret(Node *node, GlobalScope *globals)
         }
         return result;
 
+    case NODE_UNARY_OP:
+    {
+
+        int index = get_variable(globals, node->unary_op.operand->identifier.value);
+        if (globals->variables[index].type != VARIABLE_INT)
+            raise_error("Unary operations only valid for integers", "");
+
+        if (node->unary_op.token->type == TK_INC)
+        {
+            globals->variables[index].int_value++;
+        }
+        else if (node->unary_op.token->type == TK_DECR)
+        {
+            globals->variables[index].int_value--;
+        }
+        break;
+    }
     case NODE_BINARY_OP:
     {
         Value left = interpret(node->binary_op.left, globals);

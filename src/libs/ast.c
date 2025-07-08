@@ -170,6 +170,7 @@ Node *parse_primary(Parser *parser)
     {
         Token *identifier_token = token;
         Token *next = token->next;
+
         while (next && (next->type == TK_SPACE || next->type == TK_NEW_LINE))
             next = next->next;
 
@@ -180,8 +181,24 @@ Node *parse_primary(Parser *parser)
 
         else if (is_variable(identifier_token) && next && next->type != TK_GT)
         {
-
             return parse_variable(parser, identifier_token);
+        }
+        else if (next->type == TK_INC || next->type == TK_DECR)
+        {
+
+            Node *ident = malloc(sizeof(Node));
+            ident->type = NODE_IDENTIFIER;
+            ident->identifier.value = strdup(identifier_token->symbol);
+            advance(parser);
+
+            Node *unary = malloc(sizeof(Node));
+            unary->type = NODE_UNARY_OP;
+            unary->unary_op.token = parser->current;
+            unary->unary_op.operand = ident;
+
+            advance(parser);
+
+            return unary;
         }
 
         advance(parser);
@@ -421,6 +438,10 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
 
             assigned_val = parse_array_literal(parser, generic_type);
         }
+        else if (parser->current->type == TK_INC)
+        {
+            printf("sfşdjfşg\n");
+        }
         else
         {
 
@@ -612,6 +633,12 @@ void print_node(Node *node, int level)
 
         print_node(node->binary_op.left, level + 1);
         print_node(node->binary_op.right, level + 1);
+        break;
+    case NODE_UNARY_OP:
+        printf("UnaryOp: ");
+        print_token(node->unary_op.token);
+
+        print_node(node->unary_op.operand, level + 1);
         break;
 
     case NODE_FUNCTION_CALL:

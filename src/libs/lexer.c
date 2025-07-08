@@ -178,6 +178,14 @@ void print_token(Token *token)
     {
         printf("TOKEN [OR] -> %s\n", token->symbol);
     }
+    else if (token->type == TK_INC)
+    {
+        printf("TOKEN [INCREMENT] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_DECR)
+    {
+        printf("TOKEN [DECREMENT] -> %s\n", token->symbol);
+    }
     else if (token->type == TK_NULL)
     {
         printf("TOKEN [NULL] -> %s\n", "null");
@@ -236,23 +244,36 @@ void handle_number(const char *source, int *cursor, Token **head)
     free(number_str);
 }
 
-void handle_plus(int *cursor, Token **head)
+void handle_plus(const char *source, int *cursor, Token **head)
 {
-    (*cursor)++;
-    append_token(head, TK_PLUS, (TokenValue){0}, "+\0");
-}
-void handle_minus(const char *source, int *cursor, Token **head)
-{
-    if (source[*cursor++] == '>')
+    if (source[*cursor + 1] == '+')
     {
-        (*cursor)++;
-        append_token(head, TK_PUSH, (TokenValue){0}, "-\0");
+
+        *cursor += 2;
+        append_token(head, TK_INC, (TokenValue){0}, "++");
     }
     else
     {
-
         (*cursor)++;
-        append_token(head, TK_MINUS, (TokenValue){0}, "-\0");
+        append_token(head, TK_PLUS, (TokenValue){0}, "+");
+    }
+}
+void handle_minus(const char *source, int *cursor, Token **head)
+{
+    if (source[*cursor + 1] == '-')
+    {
+        *cursor += 2;
+        append_token(head, TK_DECR, (TokenValue){0}, "--");
+    }
+    else if (source[*cursor + 1] == '>')
+    {
+        *cursor += 2;
+        append_token(head, TK_PUSH, (TokenValue){0}, "->");
+    }
+    else
+    {
+        (*cursor)++;
+        append_token(head, TK_MINUS, (TokenValue){0}, "-");
     }
 }
 void handle_star(int *cursor, Token **head)
@@ -393,7 +414,7 @@ Token *tokenize(const char *source)
             handle_number(source, &cursor, &head);
         else if (current_char == '+')
         {
-            handle_plus(&cursor, &head);
+            handle_plus(source, &cursor, &head);
         }
         else if (current_char == '-')
         {

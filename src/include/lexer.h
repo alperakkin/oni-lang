@@ -40,7 +40,9 @@ typedef enum
     TK_EQ,
     TK_NEQ,
     TK_AND,
-    TK_OR
+    TK_OR,
+    TK_INC,
+    TK_DECR,
 } TokenType;
 
 typedef union
@@ -68,7 +70,8 @@ void print_token(Token *token);
 void print_tokens(Token *tokens);
 void handle_comment(const char *source, int *cursor, Token **head);
 void handle_number(const char *source, int *cursor, Token **head);
-void handle_plus(int *cursor, Token **head);
+void handle_plus(const char *source, int *cursor, Token **head);
+void handle_minus(const char *source, int *cursor, Token **head);
 void handle_string(const char *source, int *cursor, Token **head);
 void handle_identifier(const char *source, int *cursor, Token **head);
 void handle_equals(const char *source, int *cursor, Token **head);
