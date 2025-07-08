@@ -39,6 +39,8 @@ typedef enum
     TK_ELSE,
     TK_EQ,
     TK_NEQ,
+    TK_AND,
+    TK_OR
 } TokenType;
 
 typedef union

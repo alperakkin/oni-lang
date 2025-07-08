@@ -109,6 +109,14 @@ Value interpret(Node *node, GlobalScope *globals)
                 result.type = VALUE_BOOL;
                 result.bool_val = l != r;
                 break;
+            case TK_AND:
+                result.type = VALUE_BOOL;
+                result.bool_val = l && r;
+                break;
+            case TK_OR:
+                result.type = VALUE_BOOL;
+                result.bool_val = l || r;
+                break;
             default:
                 raise_error("Unknown binary operator", "");
             }
@@ -156,6 +164,14 @@ Value interpret(Node *node, GlobalScope *globals)
                 result.type = VALUE_BOOL;
                 result.bool_val = l != r;
                 break;
+            case TK_AND:
+                result.type = VALUE_BOOL;
+                result.bool_val = l && r;
+                break;
+            case TK_OR:
+                result.type = VALUE_BOOL;
+                result.bool_val = l || r;
+                break;
             default:
                 raise_error("Unknown binary operator", "");
             }
@@ -184,6 +200,7 @@ Value interpret(Node *node, GlobalScope *globals)
                 }
             }
         }
+        return result;
     }
 
     case NODE_ARRAY:
@@ -227,6 +244,7 @@ Value interpret(Node *node, GlobalScope *globals)
         }
 
         Variable var = globals->variables[index];
+
         switch (var.type)
         {
         case VARIABLE_INT:

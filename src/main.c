@@ -23,7 +23,6 @@ int main(int argc, char **argv)
     for (int i = 0; i < ast->count; i++)
     {
         Value result = interpret(ast->statements[i], globals);
-        // print_value(result);
     }
     // print_globals(globals);
 

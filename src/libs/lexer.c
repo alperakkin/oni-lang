@@ -170,6 +170,14 @@ void print_token(Token *token)
     {
         printf("TOKEN [CMP NOT EQUAL] -> %s\n", symbol);
     }
+    else if (token->type == TK_AND)
+    {
+        printf("TOKEN [AND] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_OR)
+    {
+        printf("TOKEN [OR] -> %s\n", token->symbol);
+    }
     else if (token->type == TK_NULL)
     {
         printf("TOKEN [NULL] -> %s\n", "null");
@@ -345,6 +353,16 @@ void handle_identifier(const char *source, int *cursor, Token **head)
     else if (strcmp(name, "else") == 0)
     {
         append_token(head, TK_ELSE, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "and") == 0)
+    {
+        append_token(head, TK_AND, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "or") == 0)
+    {
+        append_token(head, TK_OR, (TokenValue){0}, name);
         return;
     }
 

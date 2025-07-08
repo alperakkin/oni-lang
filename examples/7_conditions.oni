@@ -1,0 +1,12 @@
+int x = 5
+
+
+if x == 5 or x<3
+{
+    print("Multiple condition")
+}
+else {
+    print("False")
+}
+
+

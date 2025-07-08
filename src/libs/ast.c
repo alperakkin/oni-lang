@@ -16,12 +16,23 @@ int get_precedence(TokenType type)
 {
     switch (type)
     {
-    case TK_PLUS:
-    case TK_MINUS:
-        return 1;
     case TK_STAR:
     case TK_SLASH:
+        return 5;
+    case TK_PLUS:
+    case TK_MINUS:
+        return 4;
+    case TK_EQ:  // ==
+    case TK_NEQ: // !=
+    case TK_GT:  // >
+    case TK_LT:  // <
+    case TK_GTE: // >=
+    case TK_LTE: // <=
+        return 3;
+    case TK_AND: // and
         return 2;
+    case TK_OR: // or
+        return 1;
     default:
         return 0;
     }
@@ -503,10 +514,11 @@ Node *parse_if_block(Parser *parser)
         NodeBlock *else_block = parse(parser);
         if (!parser->current || parser->current->type != TK_R_CURL)
             raise_error("Expected '}' after if block", "");
+
+        node->node_if.else_block = else_block;
         advance(parser);
         skip_comment(parser);
         skip_new_line(parser);
-        node->node_if.else_block = else_block;
     }
 
     return node;
