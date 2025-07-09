@@ -591,7 +591,20 @@ NodeBlock *parse(Parser *parser)
             continue;
         }
 
-        Node *stmt = parse_expression(parser, 0);
+        Node *stmt = NULL;
+
+        if (parser->current->type == TK_IF)
+        {
+            stmt = parse_if_block(parser);
+        }
+        else if (parser->current->type == TK_WHILE)
+        {
+            stmt = parse_while_block(parser);
+        }
+        else
+        {
+            stmt = parse_expression(parser, 0);
+        }
 
         if (stmt != NULL)
         {
