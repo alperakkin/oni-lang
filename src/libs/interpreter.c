@@ -219,6 +219,21 @@ Value interpret(Node *node, GlobalScope *globals)
         }
         return result;
     }
+    case NODE_WHILE:
+    {
+
+        Value condition = interpret(node->node_while.condition, globals);
+        while (condition.bool_val != true)
+        {
+            for (int i = 0; i < node->node_while.if_block->count; i++)
+            {
+                result = interpret(node->node_while.if_block->statements[i], globals);
+            }
+            condition = interpret(node->node_while.condition, globals);
+        }
+
+        return result;
+    }
 
     case NODE_ARRAY:
     {

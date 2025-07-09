@@ -166,6 +166,10 @@ Node *parse_primary(Parser *parser)
         return parse_if_block(parser);
     }
 
+    if (token->type == TK_WHILE)
+    {
+        return parse_while_block(parser);
+    }
     if (token->type == TK_IDENTIFIER)
     {
         Token *identifier_token = token;
@@ -545,6 +549,29 @@ Node *parse_if_block(Parser *parser)
     return node;
 }
 
+Node *parse_while_block(Parser *parser)
+{
+    advance(parser);
+    Node *condition = parse_expression(parser, 0);
+    skip_comment(parser);
+    skip_new_line(parser);
+    if (!parser->current || parser->current->type != TK_L_CURL)
+        raise_error("Expected '{' before if block", "");
+    advance(parser);
+    NodeBlock *if_block = parse(parser);
+
+    if (!parser->current || parser->current->type != TK_R_CURL)
+        raise_error("Expected '}' after if block", "");
+    advance(parser);
+
+    Node *node = malloc(sizeof(Node));
+    node->type = NODE_WHILE;
+    node->node_if.condition = condition;
+    node->node_if.if_block = if_block;
+
+    return node;
+}
+
 NodeBlock *parse(Parser *parser)
 {
     NodeBlock *block = malloc(sizeof(NodeBlock));
@@ -669,6 +696,13 @@ void print_node(Node *node, int level)
             printf("Else: \n");
             print_node_block(node->node_if.else_block);
         }
+        break;
+    case NODE_WHILE:
+        printf("WHILE NODE: \n");
+        printf("Condition: \n");
+        print_node(node->node_if.condition, level + 1);
+        printf("Then: \n");
+        print_node_block(node->node_if.if_block);
         break;
 
     case NODE_NULL:

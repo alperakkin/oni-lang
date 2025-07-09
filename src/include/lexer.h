@@ -35,6 +35,7 @@ typedef enum
     TK_COMMENT,
     TK_COMP,
     TK_NULL,
+    TK_WHILE,
     TK_IF,
     TK_ELSE,
     TK_EQ,

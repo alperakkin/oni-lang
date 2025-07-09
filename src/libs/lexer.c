@@ -154,6 +154,10 @@ void print_token(Token *token)
     {
         printf("TOKEN [BOOL] -> %s\n", symbol);
     }
+    else if (token->type == TK_WHILE)
+    {
+        printf("TOKEN [WHILE] -> %s\n", token->symbol);
+    }
     else if (token->type == TK_IF)
     {
         printf("TOKEN [IF] -> %s\n", token->symbol);
@@ -384,6 +388,11 @@ void handle_identifier(const char *source, int *cursor, Token **head)
     else if (strcmp(name, "or") == 0)
     {
         append_token(head, TK_OR, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "while") == 0)
+    {
+        append_token(head, TK_WHILE, (TokenValue){0}, name);
         return;
     }
 

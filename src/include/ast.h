@@ -23,6 +23,7 @@ typedef enum
     NODE_BOOL,
     NODE_ARRAY,
     NODE_IF,
+    NODE_WHILE,
 } NodeType;
 
 typedef enum
@@ -101,6 +102,12 @@ typedef struct
     NodeBlock *else_block;
 } NodeIf;
 
+typedef struct
+{
+    Node *condition;
+    NodeBlock *if_block;
+} NodeWhile;
+
 struct Node
 {
     NodeType type;
@@ -118,6 +125,7 @@ struct Node
         NodeArray array;
         NodeBlock block;
         NodeIf node_if;
+        NodeWhile node_while;
     };
 };
 
@@ -135,6 +143,7 @@ Node *parse_variable(Parser *parser, Token *identifier_token);
 Node *parse_function_call(Parser *parser, Token *identifier_token);
 Node *parse_array_literal(Parser *parser, char *generic_type);
 Node *parse_if_block(Parser *parser);
+Node *parse_while_block(Parser *parser);
 void free_node(Node *node);
 void print_node(Node *node, int level);
 void print_node_block(NodeBlock *block);
