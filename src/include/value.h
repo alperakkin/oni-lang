@@ -26,6 +26,7 @@ typedef struct ValueArray
 struct Value
 {
     ValueType type;
+    char *name;
     union
     {
         int int_val;

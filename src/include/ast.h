@@ -24,6 +24,7 @@ typedef enum
     NODE_ARRAY,
     NODE_IF,
     NODE_WHILE,
+    NODE_FOR,
 } NodeType;
 
 typedef enum
@@ -108,9 +109,18 @@ typedef struct
     NodeBlock *if_block;
 } NodeWhile;
 
+typedef struct
+{
+    Node *iterator;
+    Node *iterable;
+    Token *type;
+    NodeBlock *for_block;
+} NodeFor;
+
 struct Node
 {
     NodeType type;
+    bool is_iterable;
     union
     {
         NodeNull null;
@@ -126,6 +136,7 @@ struct Node
         NodeBlock block;
         NodeIf node_if;
         NodeWhile node_while;
+        NodeFor node_for;
     };
 };
 
@@ -144,6 +155,7 @@ Node *parse_function_call(Parser *parser, Token *identifier_token);
 Node *parse_array_literal(Parser *parser, char *generic_type);
 Node *parse_if_block(Parser *parser);
 Node *parse_while_block(Parser *parser);
+Node *parse_for_block(Parser *parser);
 void free_node(Node *node);
 void print_node(Node *node, int level);
 void print_node_block(NodeBlock *block);

@@ -1,0 +1,1 @@
+make && ./bin/oni $1

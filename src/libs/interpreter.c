@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "builtins.h"
 
-Value interpret(Node *node, GlobalScope *globals)
+Value interpret(Node *node, Scope *scope)
 {
     Value result;
     result.type = VALUE_NULL;
@@ -32,51 +32,51 @@ Value interpret(Node *node, GlobalScope *globals)
     case NODE_UNARY_OP:
     {
 
-        int index = get_variable(globals, node->unary_op.operand->identifier.value);
-        if (globals->variables[index].type != VARIABLE_INT)
+        int index = get_variable(scope, node->unary_op.operand->identifier.value);
+        if (scope->variables[index].type != VALUE_INT)
             raise_error("Unary operations only valid for integers", "");
 
         if (node->unary_op.token->type == TK_INC)
         {
-            globals->variables[index].int_value++;
+            scope->variables[index].int_val++;
         }
         else if (node->unary_op.token->type == TK_DECR)
         {
-            globals->variables[index].int_value--;
+            scope->variables[index].int_val--;
         }
         break;
     }
     case NODE_BINARY_OP:
     {
-        Value left = interpret(node->binary_op.left, globals);
-        Value right = interpret(node->binary_op.right, globals);
+        Value left = interpret(node->binary_op.left, scope);
+        Value right = interpret(node->binary_op.right, scope);
         int is_float = (left.type == VALUE_FLOAT || right.type == VALUE_FLOAT);
         int assignment = node->binary_op.token->type == TK_ASSIGN;
 
         if (assignment)
         {
-            int index = get_variable(globals, node->binary_op.left->identifier.value);
+            int index = get_variable(scope, node->binary_op.left->identifier.value);
             switch (right.type)
             {
             case VALUE_FLOAT:
-                globals->variables[index].float_value = right.float_val;
-                globals->variables[index].type = VARIABLE_FLOAT;
+                scope->variables[index].float_val = right.float_val;
+                scope->variables[index].type = VALUE_FLOAT;
                 break;
             case VALUE_INT:
-                globals->variables[index].int_value = right.int_val;
-                globals->variables[index].type = VARIABLE_INT;
+                scope->variables[index].int_val = right.int_val;
+                scope->variables[index].type = VALUE_INT;
                 break;
             case VALUE_STRING:
-                free(globals->variables[index].string_value);
-                globals->variables[index].string_value = strdup(right.str_val);
-                globals->variables[index].type = VARIABLE_STR;
+                free(scope->variables[index].str_val);
+                scope->variables[index].str_val = strdup(right.str_val);
+                scope->variables[index].type = VALUE_STRING;
                 break;
             case VALUE_BOOL:
-                globals->variables[index].bool_value = right.bool_val;
-                globals->variables[index].type = VARIABLE_BOOL;
+                scope->variables[index].bool_val = right.bool_val;
+                scope->variables[index].type = VALUE_BOOL;
                 break;
             case VALUE_NULL:
-                globals->variables[index].type = VARIABLE_NULL;
+                scope->variables[index].type = VALUE_NULL;
                 break;
             default:
                 raise_error("Unsupported assignment type", "");
@@ -135,6 +135,7 @@ Value interpret(Node *node, GlobalScope *globals)
                 result.bool_val = l || r;
                 break;
             default:
+                print_token(node->binary_op.token);
                 raise_error("Unknown binary operator", "");
             }
         }
@@ -198,12 +199,12 @@ Value interpret(Node *node, GlobalScope *globals)
     case NODE_IF:
     {
 
-        Value condition = interpret(node->node_if.condition, globals);
+        Value condition = interpret(node->node_if.condition, scope);
         if (condition.bool_val == true)
         {
             for (int i = 0; i < node->node_if.if_block->count; i++)
             {
-                result = interpret(node->node_if.if_block->statements[i], globals);
+                result = interpret(node->node_if.if_block->statements[i], scope);
             }
         }
         else
@@ -213,7 +214,7 @@ Value interpret(Node *node, GlobalScope *globals)
 
                 for (int i = 0; i < node->node_if.else_block->count; i++)
                 {
-                    result = interpret(node->node_if.else_block->statements[i], globals);
+                    result = interpret(node->node_if.else_block->statements[i], scope);
                 }
             }
         }
@@ -222,14 +223,27 @@ Value interpret(Node *node, GlobalScope *globals)
     case NODE_WHILE:
     {
 
-        Value condition = interpret(node->node_while.condition, globals);
+        Value condition = interpret(node->node_while.condition, scope);
         while (condition.bool_val != true)
         {
             for (int i = 0; i < node->node_while.if_block->count; i++)
             {
-                result = interpret(node->node_while.if_block->statements[i], globals);
+                result = interpret(node->node_while.if_block->statements[i], scope);
             }
-            condition = interpret(node->node_while.condition, globals);
+            condition = interpret(node->node_while.condition, scope);
+        }
+
+        return result;
+    }
+    case NODE_FOR:
+    {
+
+        for (int i = 0; i < node->node_for.iterable->array.length; i++)
+        {
+            for (int i = 0; i < node->node_while.if_block->count; i++)
+            {
+                result = interpret(node->node_while.if_block->statements[i], scope);
+            }
         }
 
         return result;
@@ -248,7 +262,7 @@ Value interpret(Node *node, GlobalScope *globals)
         for (int i = 0; i < len; i++)
         {
             Value *val = malloc(sizeof(Value));
-            *val = interpret(node->array.elements[i], globals);
+            *val = interpret(node->array.elements[i], scope);
             result.array_val.elements[i] = val;
         }
         return result;
@@ -256,8 +270,8 @@ Value interpret(Node *node, GlobalScope *globals)
 
     case NODE_FUNCTION_CALL:
     {
-        Value left = interpret(node->func_call.left, globals);
-        Value right = interpret(node->func_call.right, globals);
+        Value left = interpret(node->func_call.left, scope);
+        Value right = interpret(node->func_call.right, scope);
         BuiltinFunction *fn = find_builtin(left.str_val);
         if (!fn)
             raise_error("Error: function not found", left.str_val);
@@ -266,7 +280,7 @@ Value interpret(Node *node, GlobalScope *globals)
 
     case NODE_IDENTIFIER:
     {
-        int index = get_variable(globals, node->identifier.value);
+        int index = get_variable(scope, node->identifier.value);
 
         if (index == -1)
         {
@@ -275,35 +289,35 @@ Value interpret(Node *node, GlobalScope *globals)
             return result;
         }
 
-        Variable var = globals->variables[index];
+        Value var = scope->variables[index];
 
         switch (var.type)
         {
-        case VARIABLE_INT:
+        case VALUE_INT:
             result.type = VALUE_INT;
-            result.int_val = var.int_value;
+            result.int_val = var.int_val;
             break;
-        case VARIABLE_FLOAT:
+        case VALUE_FLOAT:
             result.type = VALUE_FLOAT;
-            result.float_val = var.float_value;
+            result.float_val = var.float_val;
             break;
-        case VARIABLE_BOOL:
+        case VALUE_BOOL:
             result.type = VALUE_BOOL;
-            result.bool_val = var.bool_value;
+            result.bool_val = var.bool_val;
             break;
-        case VARIABLE_STR:
+        case VALUE_STRING:
             result.type = VALUE_STRING;
-            result.str_val = strdup(var.string_value);
+            result.str_val = strdup(var.str_val);
             break;
-        case VARIABLE_ARRAY:
+        case VALUE_ARRAY:
             result.type = VALUE_ARRAY;
-            result.array_val = var.array_value;
+            result.array_val = var.array_val;
 
-            if (var.array_value.generic_type)
-                result.array_val.generic_type = strdup(var.array_value.generic_type);
+            if (var.array_val.generic_type)
+                result.array_val.generic_type = strdup(var.array_val.generic_type);
 
             break;
-        case VARIABLE_NULL:
+        case VALUE_NULL:
         default:
             result.type = VALUE_NULL;
             break;
@@ -319,45 +333,45 @@ Value interpret(Node *node, GlobalScope *globals)
     case NODE_VARIABLE:
     {
         result.type = VALUE_VARIABLE;
-        Variable var = {0};
+        Value var = {0};
         if (!node->variable.name)
             raise_error("Variable Name not assigned", "");
         var.name = strdup(node->variable.name);
-        Value right = interpret(node->variable.value, globals);
+        Value right = interpret(node->variable.value, scope);
 
         if (strcmp(node->variable.type, "int") == 0)
         {
             if (right.type == VALUE_NULL)
-                var.type = VARIABLE_NULL;
+                var.type = VALUE_NULL;
             else
             {
-                var.int_value = (right.type == VALUE_FLOAT) ? (int)right.float_val : right.int_val;
-                var.type = VARIABLE_INT;
+                var.int_val = (right.type == VALUE_FLOAT) ? (int)right.float_val : right.int_val;
+                var.type = VALUE_INT;
             }
         }
         else if (strcmp(node->variable.type, "str") == 0)
         {
-            var.string_value = strdup(right.str_val);
-            var.type = VARIABLE_STR;
+            var.str_val = strdup(right.str_val);
+            var.type = VALUE_STRING;
         }
         else if (strcmp(node->variable.type, "float") == 0)
         {
-            var.float_value = (right.type == VALUE_INT) ? (float)right.int_val : right.float_val;
-            var.type = VARIABLE_FLOAT;
+            var.float_val = (right.type == VALUE_INT) ? (float)right.int_val : right.float_val;
+            var.type = VALUE_FLOAT;
         }
         else if (strcmp(node->variable.type, "bool") == 0)
         {
-            var.bool_value = right.bool_val;
-            var.type = VARIABLE_BOOL;
+            var.bool_val = right.bool_val;
+            var.type = VALUE_BOOL;
         }
         else if (strcmp(node->variable.type, "arr") == 0)
         {
-            var.array_value = right.array_val;
-            var.type = VARIABLE_ARRAY;
-            var.array_value.generic_type = strdup(right.array_val.generic_type);
+            var.array_val = right.array_val;
+            var.type = VALUE_ARRAY;
+            var.array_val.generic_type = strdup(right.array_val.generic_type);
         }
 
-        add_variable(globals, var);
+        add_variable(scope, var);
         return result;
     }
 

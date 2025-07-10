@@ -18,13 +18,13 @@ int main(int argc, char **argv)
     NodeBlock *ast = parse(&parser);
     // print_node_block(ast);
 
-    GlobalScope *globals = init_globals();
+    Scope *globals = init_scope();
 
     for (int i = 0; i < ast->count; i++)
     {
         Value result = interpret(ast->statements[i], globals);
     }
-    // print_globals(globals);
+    // print_scope(globals);
 
     free_tokens(tokens);
     free_node(ast);

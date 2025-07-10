@@ -4,9 +4,9 @@
 #include "variable.h"
 #include "utils.h"
 
-void add_variable(GlobalScope *scope, Variable var)
+void add_variable(Scope *scope, Value var)
 {
-    Variable *new_vars = realloc(scope->variables, sizeof(Variable) * (scope->count + 1));
+    Value *new_vars = realloc(scope->variables, sizeof(Value) * (scope->count + 1));
     if (new_vars == NULL)
     {
         fprintf(stderr, "Memory allocation failed in add_variable\n");
@@ -18,31 +18,31 @@ void add_variable(GlobalScope *scope, Variable var)
     scope->variables[scope->count].name = strdup(var.name);
     switch (var.type)
     {
-    case VARIABLE_INT:
-        scope->variables[scope->count].int_value = var.int_value;
+    case VALUE_INT:
+        scope->variables[scope->count].int_val = var.int_val;
         break;
-    case VARIABLE_FLOAT:
-        scope->variables[scope->count].float_value = var.float_value;
+    case VALUE_FLOAT:
+        scope->variables[scope->count].float_val = var.float_val;
         break;
-    case VARIABLE_STR:
-        scope->variables[scope->count].string_value = strdup(var.string_value);
+    case VALUE_STRING:
+        scope->variables[scope->count].str_val = strdup(var.str_val);
         break;
-    case VARIABLE_BOOL:
-        printf("scope length: %d - var name: %s - bool: %d\n", scope->count, var.name, var.bool_value);
-        scope->variables[scope->count].bool_value = var.bool_value;
+    case VALUE_BOOL:
+        printf("scope length: %d - var name: %s - bool: %d\n", scope->count, var.name, var.bool_val);
+        scope->variables[scope->count].bool_val = var.bool_val;
         break;
-    case VARIABLE_ARRAY:
-        scope->variables[scope->count].array_value.length = var.array_value.length;
-        scope->variables[scope->count].array_value.capacity = var.array_value.capacity;
-        scope->variables[scope->count].array_value.generic_type = strdup(var.array_value.generic_type);
-        int len = var.array_value.length;
-        scope->variables[scope->count].array_value.elements = malloc(sizeof(var.array_value) * len);
-        if (scope->variables[scope->count].array_value.elements == NULL)
+    case VALUE_ARRAY:
+        scope->variables[scope->count].array_val.length = var.array_val.length;
+        scope->variables[scope->count].array_val.capacity = var.array_val.capacity;
+        scope->variables[scope->count].array_val.generic_type = strdup(var.array_val.generic_type);
+        int len = var.array_val.length;
+        scope->variables[scope->count].array_val.elements = malloc(sizeof(var.array_val) * len);
+        if (scope->variables[scope->count].array_val.elements == NULL)
             raise_error("Memory allocation failed for array elements\n", "");
 
         for (int i = 0; i < len; i++)
         {
-            Value *src_val = var.array_value.elements[i];
+            Value *src_val = var.array_val.elements[i];
 
             Value *new_val = malloc(sizeof(Value));
             if (!new_val)
@@ -71,10 +71,10 @@ void add_variable(GlobalScope *scope, Variable var)
                 // TODO: multidimensional arrays will be defined here
             }
             scope->variables[scope->count]
-                .array_value.elements[i] = new_val;
+                .array_val.elements[i] = new_val;
         }
         break;
-    case VARIABLE_NULL:
+    case VALUE_NULL:
         break;
     default:
         raise_error("Can not assign variable", var.name);
@@ -82,12 +82,12 @@ void add_variable(GlobalScope *scope, Variable var)
     scope->count++;
 }
 
-int get_variable(GlobalScope *scope, char *var_name)
+int get_variable(Scope *scope, char *var_name)
 {
 
     for (int index = 0; index < scope->count; index++)
     {
-        Variable var = scope->variables[index];
+        Value var = scope->variables[index];
 
         if (strcmp(var.name, var_name) == 0)
             return index;
@@ -95,45 +95,45 @@ int get_variable(GlobalScope *scope, char *var_name)
     return -1;
 }
 
-GlobalScope *init_globals()
+Scope *init_scope()
 {
-    GlobalScope *scope = malloc(sizeof(GlobalScope));
+    Scope *scope = malloc(sizeof(Scope));
     scope->variables = NULL;
     scope->count = 0;
     return scope;
 }
 
-void print_globals(GlobalScope *scope)
+void print_scope(Scope *scope)
 {
 
     printf("globals = {\n");
     for (int i = 0; i < scope->count; i++)
     {
-        Variable var = scope->variables[i];
+        Value var = scope->variables[i];
         if (var.name == NULL)
             raise_error("Undefined Variable Name", "");
 
-        if (var.type == VARIABLE_STR)
+        if (var.type == VALUE_STRING)
         {
             printf("    %s (str): ", var.name);
-            printf("\"%s\",\n", var.string_value);
+            printf("\"%s\",\n", var.str_val);
         }
-        else if (var.type == VARIABLE_FLOAT)
+        else if (var.type == VALUE_FLOAT)
         {
             printf("    %s (float): ", var.name);
-            printf("%f,\n", var.float_value);
+            printf("%f,\n", var.float_val);
         }
-        else if (var.type == VARIABLE_INT)
+        else if (var.type == VALUE_INT)
         {
             printf("    %s (int): ", var.name);
-            printf("%d,\n", var.int_value);
+            printf("%d,\n", var.int_val);
         }
-        else if (var.type == VARIABLE_BOOL)
+        else if (var.type == VALUE_BOOL)
         {
             printf("    %s (bool): ", var.name);
-            printf("%s,\n", var.bool_value == 1 ? "true" : "false");
+            printf("%s,\n", var.bool_val == 1 ? "true" : "false");
         }
-        else if (var.type == VARIABLE_NULL)
+        else if (var.type == VALUE_NULL)
         {
             printf("    %s (null): ", var.name);
             printf("%s,\n", "<null>");

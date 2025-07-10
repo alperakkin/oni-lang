@@ -162,6 +162,22 @@ void print_token(Token *token)
     {
         printf("TOKEN [IF] -> %s\n", token->symbol);
     }
+    else if (token->type == TK_FOR)
+    {
+        printf("TOKEN [FOR] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_IN)
+    {
+        printf("TOKEN [IN] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_TO)
+    {
+        printf("TOKEN [TO] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_OF)
+    {
+        printf("TOKEN [OF] -> %s\n", token->symbol);
+    }
     else if (token->type == TK_ELSE)
     {
         printf("TOKEN [ELSE] -> %s\n", token->symbol);
@@ -393,6 +409,26 @@ void handle_identifier(const char *source, int *cursor, Token **head)
     else if (strcmp(name, "while") == 0)
     {
         append_token(head, TK_WHILE, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "for") == 0)
+    {
+        append_token(head, TK_FOR, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "of") == 0)
+    {
+        append_token(head, TK_OF, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "in") == 0)
+    {
+        append_token(head, TK_IN, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "to") == 0)
+    {
+        append_token(head, TK_TO, (TokenValue){0}, name);
         return;
     }
 

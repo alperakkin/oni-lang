@@ -161,15 +161,6 @@ Node *parse_primary(Parser *parser)
         node->boolean.value = token->value.null_val;
         return node;
     }
-    if (token->type == TK_IF)
-    {
-        return parse_if_block(parser);
-    }
-
-    if (token->type == TK_WHILE)
-    {
-        return parse_while_block(parser);
-    }
     if (token->type == TK_IDENTIFIER)
     {
         Token *identifier_token = token;
@@ -442,10 +433,7 @@ Node *parse_variable(Parser *parser, Token *identifier_token)
 
             assigned_val = parse_array_literal(parser, generic_type);
         }
-        else if (parser->current->type == TK_INC)
-        {
-            printf("sfşdjfşg\n");
-        }
+
         else
         {
 
@@ -572,6 +560,38 @@ Node *parse_while_block(Parser *parser)
     return node;
 }
 
+Node *parse_for_block(Parser *parser)
+{
+    advance(parser);
+    Node *node = malloc(sizeof(Node));
+    Node *iterator = parse_primary(parser);
+    if (parser->current->type != TK_OF && parser->current->type != TK_TO)
+        raise_error("For loops must continue with 'of' or 'to'", "");
+
+    Token *for_type = parser->current;
+    advance(parser);
+    Node *iterable = parse_primary(parser);
+    node->node_for.iterator = iterator;
+    node->node_for.iterable = iterable;
+    node->node_for.type = for_type;
+    node->type = NODE_FOR;
+    advance(parser);
+    skip_comment(parser);
+    skip_new_line(parser);
+    if (parser->current->type != TK_L_CURL)
+        raise_error("For loop block must started wtih '{", "");
+    advance(parser);
+
+    NodeBlock *for_block = parse(parser);
+
+    if (!parser->current || parser->current->type != TK_R_CURL)
+        raise_error("Expected '}' after for block", "");
+    node->node_for.for_block = for_block;
+    advance(parser);
+
+    return node;
+}
+
 NodeBlock *parse(Parser *parser)
 {
     NodeBlock *block = malloc(sizeof(NodeBlock));
@@ -600,6 +620,10 @@ NodeBlock *parse(Parser *parser)
         else if (parser->current->type == TK_WHILE)
         {
             stmt = parse_while_block(parser);
+        }
+        else if (parser->current->type == TK_FOR)
+        {
+            stmt = parse_for_block(parser);
         }
         else
         {
@@ -716,6 +740,17 @@ void print_node(Node *node, int level)
         print_node(node->node_if.condition, level + 1);
         printf("Then: \n");
         print_node_block(node->node_if.if_block);
+        break;
+    case NODE_FOR:
+        printf("FOR NODE: \n");
+        printf("Iterator: \n");
+        print_node(node->node_for.iterator, level + 1);
+        printf("For Type: \n");
+        print_token(node->node_for.type);
+        printf("Iterable: \n");
+        print_node(node->node_for.iterable, level + 1);
+        printf("For Block: \n");
+        print_node_block(node->node_for.for_block);
         break;
 
     case NODE_NULL:
