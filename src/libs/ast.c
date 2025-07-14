@@ -573,7 +573,7 @@ Node *parse_for_block(Parser *parser)
     Node *iterable = parse_primary(parser);
     node->node_for.iterator = iterator;
     node->node_for.iterable = iterable;
-    node->node_for.type = for_type;
+    node->node_for.token = for_type;
     node->type = NODE_FOR;
     advance(parser);
     skip_comment(parser);
@@ -746,7 +746,7 @@ void print_node(Node *node, int level)
         printf("Iterator: \n");
         print_node(node->node_for.iterator, level + 1);
         printf("For Type: \n");
-        print_token(node->node_for.type);
+        print_token(node->node_for.token);
         printf("Iterable: \n");
         print_node(node->node_for.iterable, level + 1);
         printf("For Block: \n");

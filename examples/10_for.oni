@@ -1,11 +1,22 @@
 
 arr<int> y = [3,2,1]
-for i to 5
-{
-    print(i)
-}
 
 for i of y
 {
     print(i)
+}
+print("")
+print("another loop")
+print("")
+for i to 5
+{
+    print(i)
+
+}
+
+arr<str> words = ["hello","world"]
+
+for word of words
+{
+    print(word)
 }

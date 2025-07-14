@@ -113,7 +113,7 @@ typedef struct
 {
     Node *iterator;
     Node *iterable;
-    Token *type;
+    Token *token;
     NodeBlock *for_block;
 } NodeFor;
 

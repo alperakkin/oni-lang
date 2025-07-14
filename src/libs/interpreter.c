@@ -244,16 +244,72 @@ Value interpret(Node *node, Scope *scope)
     case NODE_FOR:
     {
         Scope *locals = init_scope(scope);
-        Value iterator = interpret(node->node_for.iterator, locals);
+
+        char *iter_name = strdup(node->node_for.iterator->identifier.value);
+
+        Value iterator = {0};
+        iterator.type = VALUE_INT;
+        iterator.int_val = 0;
+        iterator.name = iter_name;
+
         add_variable(locals, iterator);
-        for (int i = 0; i < node->node_for.iterable->array.length; i++)
+
+        int length = 0;
+        Value iterable = interpret(node->node_for.iterable, scope);
+
+        Scope *found_scope = NULL;
+        int index = get_variable(locals, iter_name, &found_scope);
+        if (index == -1)
+            raise_error("Iterator variable not found in locals", iter_name);
+
+        Value result = {0};
+
+        if (node->node_for.token->type == TK_TO)
         {
-            for (int i = 0; i < node->node_while.if_block->count; i++)
+
+            if (iterable.type != VALUE_INT)
+                raise_error("FOR TO expects an integer limit", "");
+
+            length = iterable.int_val;
+
+            for (int i = 0; i < length; i++)
             {
-                result = interpret(node->node_while.if_block->statements[i], locals);
+
+                found_scope->variables[index].int_val = i;
+
+                for (int j = 0; j < node->node_for.for_block->count; j++)
+                {
+                    result = interpret(node->node_for.for_block->statements[j], locals);
+                }
             }
         }
+        else if (node->node_for.token->type == TK_OF)
+        {
 
+            if (iterable.type != VALUE_ARRAY)
+                raise_error("FOR OF expects an array iterable", "");
+
+            length = iterable.array_val.length;
+
+            for (int i = 0; i < length; i++)
+            {
+
+                found_scope->variables[index] = *iterable.array_val.elements[i];
+
+                found_scope->variables[index].name = strdup(iter_name);
+
+                for (int j = 0; j < node->node_for.for_block->count; j++)
+                {
+                    result = interpret(node->node_for.for_block->statements[j], locals);
+                }
+            }
+        }
+        else
+        {
+            raise_error("Unsupported for loop token type", "");
+        }
+
+        free(iter_name);
         return result;
     }
 
@@ -383,6 +439,7 @@ Value interpret(Node *node, Scope *scope)
         }
 
         add_variable(scope, var);
+
         return result;
     }
 
