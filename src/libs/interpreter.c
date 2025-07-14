@@ -235,10 +235,14 @@ Value interpret(Node *node, Scope *scope)
             for (int i = 0; i < node->node_while.if_block->count; i++)
             {
                 result = interpret(node->node_while.if_block->statements[i], scope);
+                if (result.type == VALUE_CONTROL_BREAK)
+                    goto end_while;
+                else if (result.type == VALUE_CONTROL_CONTINUE)
+                    break;
             }
             condition = interpret(node->node_while.condition, scope);
         }
-
+    end_while:
         return result;
     }
     case NODE_FOR:
