@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     NodeBlock *ast = parse(&parser);
     // print_node_block(ast);
 
-    Scope *globals = init_scope();
+    Scope *globals = init_scope(NULL);
 
     for (int i = 0; i < ast->count; i++)
     {

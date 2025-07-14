@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "interpreter.h"
+#include "variable.h"
 #include "value.h"
 #include "utils.h"
 #include "builtins.h"
@@ -31,23 +32,24 @@ Value interpret(Node *node, Scope *scope)
 
     case NODE_UNARY_OP:
     {
-
-        int index = get_variable(scope, node->unary_op.operand->identifier.value);
+        Scope *found_scope = NULL;
+        int index = get_variable(scope, node->unary_op.operand->identifier.value, &found_scope);
         if (scope->variables[index].type != VALUE_INT)
             raise_error("Unary operations only valid for integers", "");
 
         if (node->unary_op.token->type == TK_INC)
         {
-            scope->variables[index].int_val++;
+            found_scope->variables[index].int_val++;
         }
         else if (node->unary_op.token->type == TK_DECR)
         {
-            scope->variables[index].int_val--;
+            found_scope->variables[index].int_val--;
         }
         break;
     }
     case NODE_BINARY_OP:
     {
+
         Value left = interpret(node->binary_op.left, scope);
         Value right = interpret(node->binary_op.right, scope);
         int is_float = (left.type == VALUE_FLOAT || right.type == VALUE_FLOAT);
@@ -55,28 +57,29 @@ Value interpret(Node *node, Scope *scope)
 
         if (assignment)
         {
-            int index = get_variable(scope, node->binary_op.left->identifier.value);
+            Scope *found_scope = NULL;
+            int index = get_variable(scope, node->binary_op.left->identifier.value, &found_scope);
             switch (right.type)
             {
             case VALUE_FLOAT:
-                scope->variables[index].float_val = right.float_val;
-                scope->variables[index].type = VALUE_FLOAT;
+                found_scope->variables[index].float_val = right.float_val;
+                found_scope->variables[index].type = VALUE_FLOAT;
                 break;
             case VALUE_INT:
-                scope->variables[index].int_val = right.int_val;
-                scope->variables[index].type = VALUE_INT;
+                found_scope->variables[index].int_val = right.int_val;
+                found_scope->variables[index].type = VALUE_INT;
                 break;
             case VALUE_STRING:
-                free(scope->variables[index].str_val);
-                scope->variables[index].str_val = strdup(right.str_val);
-                scope->variables[index].type = VALUE_STRING;
+                free(found_scope->variables[index].str_val);
+                found_scope->variables[index].str_val = strdup(right.str_val);
+                found_scope->variables[index].type = VALUE_STRING;
                 break;
             case VALUE_BOOL:
-                scope->variables[index].bool_val = right.bool_val;
-                scope->variables[index].type = VALUE_BOOL;
+                found_scope->variables[index].bool_val = right.bool_val;
+                found_scope->variables[index].type = VALUE_BOOL;
                 break;
             case VALUE_NULL:
-                scope->variables[index].type = VALUE_NULL;
+                found_scope->variables[index].type = VALUE_NULL;
                 break;
             default:
                 raise_error("Unsupported assignment type", "");
@@ -202,19 +205,22 @@ Value interpret(Node *node, Scope *scope)
         Value condition = interpret(node->node_if.condition, scope);
         if (condition.bool_val == true)
         {
+            Scope *locals = init_scope(scope);
+
             for (int i = 0; i < node->node_if.if_block->count; i++)
             {
-                result = interpret(node->node_if.if_block->statements[i], scope);
+                result = interpret(node->node_if.if_block->statements[i], locals);
             }
         }
         else
         {
             if (node->node_if.else_block)
             {
+                Scope *locals = init_scope(scope);
 
                 for (int i = 0; i < node->node_if.else_block->count; i++)
                 {
-                    result = interpret(node->node_if.else_block->statements[i], scope);
+                    result = interpret(node->node_if.else_block->statements[i], locals);
                 }
             }
         }
@@ -237,12 +243,14 @@ Value interpret(Node *node, Scope *scope)
     }
     case NODE_FOR:
     {
-
+        Scope *locals = init_scope(scope);
+        Value iterator = interpret(node->node_for.iterator, locals);
+        add_variable(locals, iterator);
         for (int i = 0; i < node->node_for.iterable->array.length; i++)
         {
             for (int i = 0; i < node->node_while.if_block->count; i++)
             {
-                result = interpret(node->node_while.if_block->statements[i], scope);
+                result = interpret(node->node_while.if_block->statements[i], locals);
             }
         }
 
@@ -270,8 +278,10 @@ Value interpret(Node *node, Scope *scope)
 
     case NODE_FUNCTION_CALL:
     {
+
         Value left = interpret(node->func_call.left, scope);
         Value right = interpret(node->func_call.right, scope);
+
         BuiltinFunction *fn = find_builtin(left.str_val);
         if (!fn)
             raise_error("Error: function not found", left.str_val);
@@ -280,7 +290,8 @@ Value interpret(Node *node, Scope *scope)
 
     case NODE_IDENTIFIER:
     {
-        int index = get_variable(scope, node->identifier.value);
+        Scope *found_scope = NULL;
+        int index = get_variable(scope, node->identifier.value, &found_scope);
 
         if (index == -1)
         {
@@ -289,7 +300,7 @@ Value interpret(Node *node, Scope *scope)
             return result;
         }
 
-        Value var = scope->variables[index];
+        Value var = found_scope->variables[index];
 
         switch (var.type)
         {

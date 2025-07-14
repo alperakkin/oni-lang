@@ -82,24 +82,34 @@ void add_variable(Scope *scope, Value var)
     scope->count++;
 }
 
-int get_variable(Scope *scope, char *var_name)
+int get_variable(Scope *scope, char *var_name, Scope **found)
 {
 
-    for (int index = 0; index < scope->count; index++)
+    Scope *current = scope;
+    while (current != NULL)
     {
-        Value var = scope->variables[index];
 
-        if (strcmp(var.name, var_name) == 0)
-            return index;
+        for (int index = 0; index < scope->count; index++)
+        {
+            Value var = scope->variables[index];
+
+            if (strcmp(var.name, var_name) == 0)
+            {
+                *found = current;
+                return index;
+            }
+        }
+        current = current->parent;
     }
     return -1;
 }
 
-Scope *init_scope()
+Scope *init_scope(Scope *parent)
 {
     Scope *scope = malloc(sizeof(Scope));
     scope->variables = NULL;
     scope->count = 0;
+    scope->parent = parent;
     return scope;
 }
 
