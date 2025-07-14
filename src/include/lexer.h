@@ -48,6 +48,10 @@ typedef enum
     TK_OR,
     TK_INC,
     TK_DECR,
+    TK_FUNC_DEF,
+    TK_RETURN,
+    TK_BREAK,
+    TK_CONTINUE,
 } TokenType;
 
 typedef union

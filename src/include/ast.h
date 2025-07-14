@@ -11,20 +11,22 @@ typedef struct
 
 typedef enum
 {
-    NODE_NUMBER,
-    NODE_STRING,
-    NODE_BINARY_OP,
-    NODE_UNARY_OP,
-    NODE_FUNCTION_CALL,
-    NODE_IDENTIFIER,
-    NODE_BLOCK,
-    NODE_VARIABLE,
-    NODE_NULL,
-    NODE_BOOL,
-    NODE_ARRAY,
-    NODE_IF,
-    NODE_WHILE,
-    NODE_FOR,
+    NODE_NUMBER,        // 0
+    NODE_STRING,        // 1
+    NODE_BINARY_OP,     // 2
+    NODE_UNARY_OP,      // 3
+    NODE_FUNCTION_CALL, // 4
+    NODE_IDENTIFIER,    // 5
+    NODE_BLOCK,         // 6
+    NODE_VARIABLE,      // 7
+    NODE_NULL,          // 8
+    NODE_BOOL,          // 9
+    NODE_ARRAY,         // 10
+    NODE_IF,            // 11
+    NODE_WHILE,         // 12
+    NODE_FOR,           // 13
+    NODE_CONTINUE,      // 14
+    NODE_BREAK,         // 15
 } NodeType;
 
 typedef enum

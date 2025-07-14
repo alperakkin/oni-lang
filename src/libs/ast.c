@@ -202,6 +202,20 @@ Node *parse_primary(Parser *parser)
         node->identifier.value = identifier_token->value.identifier;
         return node;
     }
+    if (token->type == TK_CONTINUE)
+    {
+        advance(parser);
+        Node *node_continue = malloc(sizeof(Node));
+        node_continue->type = NODE_CONTINUE;
+        return node_continue;
+    }
+    if (token->type == TK_BREAK)
+    {
+        advance(parser);
+        Node *node_break = malloc(sizeof(Node));
+        node_break->type = NODE_BREAK;
+        return node_break;
+    }
 
     char symbol[2];
     symbol[0] = *token->symbol;
@@ -752,7 +766,12 @@ void print_node(Node *node, int level)
         printf("For Block: \n");
         print_node_block(node->node_for.for_block);
         break;
-
+    case NODE_BREAK:
+        printf("Break\n");
+        break;
+    case NODE_CONTINUE:
+        printf("Continue\n");
+        break;
     case NODE_NULL:
         printf("Null\n");
         break;

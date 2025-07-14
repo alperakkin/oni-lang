@@ -1,0 +1,20 @@
+
+
+@ greet(str:name)
+{
+    print(name)
+}
+
+@ sum(int a, int b=2) <int>
+{
+    return a+b
+}
+greet("John Doe")
+
+int z = sum(2,4)
+print(z)
+
+print(sum(1))
+
+
+

@@ -8,10 +8,11 @@ for i of y
 print("")
 print("another loop")
 print("")
-for i to 5
+for i to 8
 {
+    if i<3{continue}
+    if i==7{break}
     print(i)
-
 }
 
 arr<str> words = ["hello","world"]

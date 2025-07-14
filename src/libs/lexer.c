@@ -202,6 +202,22 @@ void print_token(Token *token)
     {
         printf("TOKEN [INCREMENT] -> %s\n", token->symbol);
     }
+    else if (token->type == TK_FUNC_DEF)
+    {
+        printf("TOKEN [FUNCTION DEFINITION] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_RETURN)
+    {
+        printf("TOKEN [RETURN] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_BREAK)
+    {
+        printf("TOKEN [BREAK] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_CONTINUE)
+    {
+        printf("TOKEN [CONTINUE] -> %s\n", token->symbol);
+    }
     else if (token->type == TK_DECR)
     {
         printf("TOKEN [DECREMENT] -> %s\n", token->symbol);
@@ -431,6 +447,21 @@ void handle_identifier(const char *source, int *cursor, Token **head)
         append_token(head, TK_TO, (TokenValue){0}, name);
         return;
     }
+    else if (strcmp(name, "return") == 0)
+    {
+        append_token(head, TK_RETURN, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "continue") == 0)
+    {
+        append_token(head, TK_CONTINUE, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "break") == 0)
+    {
+        append_token(head, TK_BREAK, (TokenValue){0}, name);
+        return;
+    }
 
     val.identifier = name;
 
@@ -492,6 +523,12 @@ Token *tokenize(const char *source)
         {
 
             append_token(&head, TK_LT, (TokenValue){0}, &current_char);
+            cursor++;
+        }
+        else if (current_char == '@')
+        {
+
+            append_token(&head, TK_FUNC_DEF, (TokenValue){0}, &current_char);
             cursor++;
         }
         else if (current_char == '>')

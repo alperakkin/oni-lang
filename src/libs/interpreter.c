@@ -280,6 +280,10 @@ Value interpret(Node *node, Scope *scope)
                 for (int j = 0; j < node->node_for.for_block->count; j++)
                 {
                     result = interpret(node->node_for.for_block->statements[j], locals);
+                    if (result.type == VALUE_CONTROL_BREAK)
+                        goto end_for;
+                    else if (result.type == VALUE_CONTROL_CONTINUE)
+                        break;
                 }
             }
         }
@@ -301,6 +305,11 @@ Value interpret(Node *node, Scope *scope)
                 for (int j = 0; j < node->node_for.for_block->count; j++)
                 {
                     result = interpret(node->node_for.for_block->statements[j], locals);
+
+                    if (result.type == VALUE_CONTROL_BREAK)
+                        goto end_for;
+                    else if (result.type == VALUE_CONTROL_CONTINUE)
+                        break;
                 }
             }
         }
@@ -310,6 +319,7 @@ Value interpret(Node *node, Scope *scope)
         }
 
         free(iter_name);
+    end_for:
         return result;
     }
 
@@ -452,7 +462,12 @@ Value interpret(Node *node, Scope *scope)
         result.type = VALUE_BOOL;
         result.bool_val = node->boolean.value;
         return result;
-
+    case NODE_BREAK:
+        result.type = VALUE_CONTROL_BREAK;
+        return result;
+    case NODE_CONTINUE:
+        result.type = VALUE_CONTROL_CONTINUE;
+        return result;
     default:
         printf("Node Type %d\n", node->type);
         raise_error("Error: unsupported node type", "");

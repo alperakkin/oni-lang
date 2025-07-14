@@ -4,13 +4,15 @@
 
 typedef enum
 {
-    VALUE_INT,
-    VALUE_STRING,
-    VALUE_FLOAT,
-    VALUE_VARIABLE,
-    VALUE_BOOL,
-    VALUE_NULL,
-    VALUE_ARRAY,
+    VALUE_INT,              // 0
+    VALUE_STRING,           // 1
+    VALUE_FLOAT,            // 2
+    VALUE_VARIABLE,         // 3
+    VALUE_BOOL,             // 4
+    VALUE_NULL,             // 5
+    VALUE_ARRAY,            // 6
+    VALUE_CONTROL_BREAK,    // 7
+    VALUE_CONTROL_CONTINUE, // 8
 } ValueType;
 
 typedef struct Value Value;
