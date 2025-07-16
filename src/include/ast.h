@@ -27,6 +27,8 @@ typedef enum
     NODE_FOR,           // 13
     NODE_CONTINUE,      // 14
     NODE_BREAK,         // 15
+    NODE_FUNCTION_DEF,  // 16
+    NODE_RETURN,        // 17
 } NodeType;
 
 typedef enum
@@ -72,6 +74,23 @@ typedef struct
     Node *operand;
     Token *token;
 } NodeUnaryOp;
+
+typedef struct
+{
+    char *name;
+    NodeBlock *func_block;
+    Node **args;
+    Node **kwargs;
+    int args_count;
+    int kwargs_count;
+    Node *return_type;
+
+} NodeFuncDef;
+
+typedef struct
+{
+    Node *expression;
+} NodeReturn;
 
 typedef struct
 {
@@ -130,6 +149,7 @@ struct Node
         NodeNumber number;
         NodeBinaryOp binary_op;
         NodeUnaryOp unary_op;
+        NodeFuncDef func_def;
         NodeFuncCall func_call;
         NodeIdentifier identifier;
         NodeString string;
@@ -139,6 +159,7 @@ struct Node
         NodeIf node_if;
         NodeWhile node_while;
         NodeFor node_for;
+        NodeReturn node_return;
     };
 };
 
@@ -153,6 +174,7 @@ NodeBlock *parse(Parser *parser);
 Node *create_node_array(char *generic_type);
 void node_array_push(Node *array_node, Node *element);
 Node *parse_variable(Parser *parser, Token *identifier_token);
+Node *parse_function_definition(Parser *parser);
 Node *parse_function_call(Parser *parser, Token *identifier_token);
 Node *parse_array_literal(Parser *parser, char *generic_type);
 Node *parse_if_block(Parser *parser);
