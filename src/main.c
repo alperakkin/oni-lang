@@ -5,6 +5,7 @@
 #include "interpreter.h"
 #include "utils.h"
 #include "variable.h"
+#include "functions.h"
 
 int main(int argc, char **argv)
 {
@@ -16,13 +17,14 @@ int main(int argc, char **argv)
     Parser parser;
     parser.current = tokens;
     NodeBlock *ast = parse(&parser);
-    print_node_block(ast);
+    // print_node_block(ast);
 
     Scope *globals = init_scope(NULL);
+    FunctionRegistry *registry = init_function_registry();
 
     for (int i = 0; i < ast->count; i++)
     {
-        Value result = interpret(ast->statements[i], globals);
+        Value result = interpret(ast->statements[i], globals, registry);
     }
     // print_scope(globals);
 

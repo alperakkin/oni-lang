@@ -262,6 +262,8 @@ Node *parse_expression(Parser *parser, int min_precedence)
 
         if (token->type == TK_R_PAREN || token->type == TK_R_CURL || token->type == TK_L_CURL)
             break;
+        if (token->type == TK_COMMA)
+            break;
         int precedence = get_precedence(token->type);
         if (precedence < min_precedence)
             break;
@@ -510,15 +512,10 @@ Node *parse_function_definition(Parser *parser)
 
     advance(parser);
 
-    if (parser->current->type != TK_IDENTIFIER && parser->current->type != TK_R_PAREN)
-        raise_error("Expected a argument type definition or closing paranthesis", "");
     while (parser->current->type != TK_R_PAREN)
     {
 
         Node *argument = malloc(sizeof(Node));
-
-        argument->type = NODE_VARIABLE;
-        argument->variable.type = strdup(parser->current->symbol);
 
         advance(parser);
 
@@ -573,16 +570,14 @@ Node *parse_function_definition(Parser *parser)
     NodeBlock *func_block = parse(parser);
 
     Node *node = malloc(sizeof(Node));
-    if (args)
-        node->func_def.args = args;
-    if (kwargs)
-        node->func_def.kwargs = kwargs;
+
+    node->func_def.args = args;
+    node->func_def.kwargs = kwargs;
     node->type = NODE_FUNCTION_DEF;
     node->func_def.name = strdup(name);
     node->func_def.args_count = args_count;
     node->func_def.kwargs_count = kwargs_count;
-    if (func_block)
-        node->func_def.func_block = func_block;
+    node->func_def.func_block = func_block;
     node->func_def.return_type = return_type;
     if (!parser->current || parser->current->type != TK_R_CURL)
         raise_error("Expected '}' after function definition", "");
@@ -592,37 +587,76 @@ Node *parse_function_definition(Parser *parser)
 
     return node;
 }
-
 Node *parse_function_call(Parser *parser, Token *identifier_token)
 {
+    int args_count = 0;
+    int kwargs_count = 0;
+    Node **args = NULL;
+    Node **kwargs = NULL;
+
     advance(parser);
 
     if (parser->current == NULL || parser->current->type != TK_L_PAREN)
     {
-        raise_error("Expected '(' after ->", parser->current ? parser->current->symbol : "");
+        raise_error("Expected '(' after function name", parser->current ? parser->current->symbol : "");
     }
 
     advance(parser);
 
-    Node *arg_expr = parse_expression(parser, 0);
+    while (parser->current->type != TK_R_PAREN && parser->current->type != TK_EOF)
+    {
+        if (parser->current->type == TK_IDENTIFIER &&
+            parser->current->next != NULL && parser->current->next->type == TK_ASSIGN)
+        {
+
+            char *key = strdup(parser->current->symbol);
+            advance(parser);
+            advance(parser);
+
+            Node *value_expr = parse_expression(parser, 0);
+
+            Node *keyval_node = malloc(sizeof(Node));
+            keyval_node->type = NODE_VARIABLE;
+            keyval_node->variable.name = key;
+            keyval_node->variable.value = value_expr;
+
+            kwargs = realloc(kwargs, sizeof(Node *) * (kwargs_count + 1));
+            kwargs[kwargs_count++] = keyval_node;
+        }
+        else
+        {
+
+            Node *argument = parse_expression(parser, 0);
+
+            args = realloc(args, sizeof(Node *) * (args_count + 1));
+            args[args_count++] = argument;
+        }
+
+        if (parser->current->type == TK_COMMA)
+        {
+            advance(parser);
+        }
+        else
+        {
+            break;
+        }
+    }
 
     if (parser->current == NULL || parser->current->type != TK_R_PAREN)
     {
-        raise_error("Expected ')' after expression in function call", parser->current ? parser->current->symbol : "");
+        raise_error("Expected ')' after function arguments", "");
     }
 
     advance(parser);
 
-    Node *identifier_node = malloc(sizeof(Node));
-    identifier_node->type = NODE_IDENTIFIER;
-    identifier_node->identifier.value = identifier_token->value.identifier;
-
-    Node *func_call = malloc(sizeof(Node));
-    func_call->type = NODE_FUNCTION_CALL;
-    func_call->func_call.left = identifier_node;
-    func_call->func_call.right = arg_expr;
-
-    return func_call;
+    Node *node = malloc(sizeof(Node));
+    node->type = NODE_FUNCTION_CALL;
+    node->func_call.name = strdup(identifier_token->symbol);
+    node->func_call.args = args;
+    node->func_call.kwargs = kwargs;
+    node->func_call.args_count = args_count;
+    node->func_call.kwargs_count = kwargs_count;
+    return node;
 }
 
 Node *parse_if_block(Parser *parser)
@@ -781,6 +815,8 @@ NodeBlock *parse(Parser *parser)
 
 void free_node(Node *node)
 {
+
+    // TODO Revisit this method to optimize memory management
     if (!node)
         return;
 
@@ -791,8 +827,8 @@ void free_node(Node *node)
         free_node(node->binary_op.right);
         break;
     case NODE_FUNCTION_CALL:
-        free_node(node->func_call.left);
-        free_node(node->func_call.right);
+        free_node(node->func_call.args);
+        free_node(node->func_call.kwargs);
         break;
     default:
         break;
@@ -860,10 +896,19 @@ void print_node(Node *node, int level)
         print_node_block(node->func_def.func_block);
         break;
     case NODE_FUNCTION_CALL:
-        printf("FunctionCall: %s\n", "->");
+        printf("FunctionCall: %s ->\n", strdup(node->func_call.name));
 
-        print_node(node->func_call.left, level + 1);
-        print_node(node->func_call.right, level + 1);
+        for (int i = 0; i < node->func_call.args_count; i++)
+        {
+            printf("Arguments (%d):\n", node->func_call.args_count);
+            print_node(node->func_call.args[i], level + 1);
+        }
+
+        printf("Optional Arguments (%d):\n", node->func_call.kwargs_count);
+        for (int i = 0; i < node->func_call.kwargs_count; i++)
+        {
+            print_node(node->func_call.kwargs[i], level + 1);
+        }
         break;
 
     case NODE_VARIABLE:

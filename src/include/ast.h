@@ -78,11 +78,12 @@ typedef struct
 typedef struct
 {
     char *name;
-    NodeBlock *func_block;
     Node **args;
-    Node **kwargs;
     int args_count;
+    Node **kwargs;
     int kwargs_count;
+
+    NodeBlock *func_block;
     Node *return_type;
 
 } NodeFuncDef;
@@ -94,8 +95,11 @@ typedef struct
 
 typedef struct
 {
-    Node *left;
-    Node *right;
+    char *name;
+    Node **args;
+    Node **kwargs;
+    int args_count;
+    int kwargs_count;
 
 } NodeFuncCall;
 

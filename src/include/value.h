@@ -13,6 +13,7 @@ typedef enum
     VALUE_ARRAY,            // 6
     VALUE_CONTROL_BREAK,    // 7
     VALUE_CONTROL_CONTINUE, // 8
+    VALUE_RETURN,           // 9
 } ValueType;
 
 typedef struct Value Value;

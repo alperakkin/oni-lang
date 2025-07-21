@@ -5,9 +5,8 @@
 #include "variable.h"
 #include "value.h"
 #include "utils.h"
-#include "builtins.h"
 
-Value interpret(Node *node, Scope *scope)
+Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
 {
     Value result;
     result.type = VALUE_NULL;
@@ -50,8 +49,8 @@ Value interpret(Node *node, Scope *scope)
     case NODE_BINARY_OP:
     {
 
-        Value left = interpret(node->binary_op.left, scope);
-        Value right = interpret(node->binary_op.right, scope);
+        Value left = interpret(node->binary_op.left, scope, registry);
+        Value right = interpret(node->binary_op.right, scope, registry);
         int is_float = (left.type == VALUE_FLOAT || right.type == VALUE_FLOAT);
         int assignment = node->binary_op.token->type == TK_ASSIGN;
 
@@ -202,14 +201,14 @@ Value interpret(Node *node, Scope *scope)
     case NODE_IF:
     {
 
-        Value condition = interpret(node->node_if.condition, scope);
+        Value condition = interpret(node->node_if.condition, scope, registry);
         if (condition.bool_val == true)
         {
             Scope *locals = init_scope(scope);
 
             for (int i = 0; i < node->node_if.if_block->count; i++)
             {
-                result = interpret(node->node_if.if_block->statements[i], locals);
+                result = interpret(node->node_if.if_block->statements[i], locals, registry);
             }
         }
         else
@@ -220,7 +219,7 @@ Value interpret(Node *node, Scope *scope)
 
                 for (int i = 0; i < node->node_if.else_block->count; i++)
                 {
-                    result = interpret(node->node_if.else_block->statements[i], locals);
+                    result = interpret(node->node_if.else_block->statements[i], locals, registry);
                 }
             }
         }
@@ -229,18 +228,18 @@ Value interpret(Node *node, Scope *scope)
     case NODE_WHILE:
     {
 
-        Value condition = interpret(node->node_while.condition, scope);
+        Value condition = interpret(node->node_while.condition, scope, registry);
         while (condition.bool_val != true)
         {
             for (int i = 0; i < node->node_while.if_block->count; i++)
             {
-                result = interpret(node->node_while.if_block->statements[i], scope);
+                result = interpret(node->node_while.if_block->statements[i], scope, registry);
                 if (result.type == VALUE_CONTROL_BREAK)
                     goto end_while;
                 else if (result.type == VALUE_CONTROL_CONTINUE)
                     break;
             }
-            condition = interpret(node->node_while.condition, scope);
+            condition = interpret(node->node_while.condition, scope, registry);
         }
     end_while:
         return result;
@@ -259,7 +258,7 @@ Value interpret(Node *node, Scope *scope)
         add_variable(locals, iterator);
 
         int length = 0;
-        Value iterable = interpret(node->node_for.iterable, scope);
+        Value iterable = interpret(node->node_for.iterable, scope, registry);
 
         Scope *found_scope = NULL;
         int index = get_variable(locals, iter_name, &found_scope);
@@ -283,7 +282,7 @@ Value interpret(Node *node, Scope *scope)
 
                 for (int j = 0; j < node->node_for.for_block->count; j++)
                 {
-                    result = interpret(node->node_for.for_block->statements[j], locals);
+                    result = interpret(node->node_for.for_block->statements[j], locals, registry);
                     if (result.type == VALUE_CONTROL_BREAK)
                         goto end_for;
                     else if (result.type == VALUE_CONTROL_CONTINUE)
@@ -308,7 +307,7 @@ Value interpret(Node *node, Scope *scope)
 
                 for (int j = 0; j < node->node_for.for_block->count; j++)
                 {
-                    result = interpret(node->node_for.for_block->statements[j], locals);
+                    result = interpret(node->node_for.for_block->statements[j], locals, registry);
 
                     if (result.type == VALUE_CONTROL_BREAK)
                         goto end_for;
@@ -340,7 +339,7 @@ Value interpret(Node *node, Scope *scope)
         for (int i = 0; i < len; i++)
         {
             Value *val = malloc(sizeof(Value));
-            *val = interpret(node->array.elements[i], scope);
+            *val = interpret(node->array.elements[i], scope, registry);
             result.array_val.elements[i] = val;
         }
         return result;
@@ -349,13 +348,22 @@ Value interpret(Node *node, Scope *scope)
     case NODE_FUNCTION_CALL:
     {
 
-        Value left = interpret(node->func_call.left, scope);
-        Value right = interpret(node->func_call.right, scope);
+        Scope *locals = init_scope(scope);
+        char *name = strdup(node->func_call.name);
 
-        BuiltinFunction *fn = find_builtin(left.str_val);
+        Function *fn = get_function(name, registry);
+
         if (!fn)
-            raise_error("Error: function not found", left.str_val);
-        return fn->func(&right, 1);
+            raise_error("Error: function not found", name);
+
+        return call_function(
+            fn,
+            node->func_call.args,
+            node->func_call.args_count,
+            node->func_call.kwargs,
+            node->func_call.kwargs_count,
+            locals,
+            registry);
     }
 
     case NODE_IDENTIFIER:
@@ -365,9 +373,7 @@ Value interpret(Node *node, Scope *scope)
 
         if (index == -1)
         {
-            result.type = VALUE_STRING;
-            result.str_val = node->identifier.value;
-            return result;
+            raise_error("Undefined variable name", strdup(node->identifier.value));
         }
 
         Value var = found_scope->variables[index];
@@ -418,7 +424,7 @@ Value interpret(Node *node, Scope *scope)
         if (!node->variable.name)
             raise_error("Variable Name not assigned", "");
         var.name = strdup(node->variable.name);
-        Value right = interpret(node->variable.value, scope);
+        Value right = interpret(node->variable.value, scope, registry);
 
         if (strcmp(node->variable.type, "int") == 0)
         {
@@ -456,6 +462,32 @@ Value interpret(Node *node, Scope *scope)
 
         return result;
     }
+    case NODE_FUNCTION_DEF:
+    {
+        char *name = strdup(node->func_def.name);
+
+        Function *func = malloc(sizeof(Function));
+        func->name = name;
+        func->is_builtin = false;
+        func->func = NULL;
+        func->block = node->func_def.func_block;
+        func->args = node->func_def.args;
+        func->args_count = node->func_def.args_count;
+        func->kwargs = node->func_def.kwargs;
+        func->kwargs_count = node->func_def.kwargs_count;
+
+        add_function(registry, func);
+
+        Value result = {0};
+        result.type = VALUE_NULL;
+        return result;
+    }
+    case NODE_RETURN:
+    {
+        result = interpret(node, scope, registry);
+        result.type = VALUE_RETURN;
+        return result;
+    }
 
     case NODE_NULL:
         result.type = VALUE_NULL;
@@ -482,7 +514,6 @@ Value interpret(Node *node, Scope *scope)
 
 void print_value(Value v)
 {
-
     if (v.type == VALUE_NULL)
     {
         printf("<null>\n");

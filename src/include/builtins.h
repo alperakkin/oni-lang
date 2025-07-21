@@ -8,15 +8,6 @@ typedef enum
     PRINT_FUNCTION,
 } BuiltinType;
 
-typedef struct
-{
-    const char *name;
-    Value (*func)(Value *args, int arg_count);
-} BuiltinFunction;
-
-extern BuiltinFunction builtin_func[];
-
-Value builtin_print(Value *args, int arg_count);
-BuiltinFunction *find_builtin(const char *name);
+Value builtin_print(Value *args, Value *kwargs, int arg_count, int kwarg_count);
 
 #endif

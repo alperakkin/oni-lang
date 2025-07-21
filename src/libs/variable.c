@@ -6,6 +6,7 @@
 
 void add_variable(Scope *scope, Value var)
 {
+
     Value *new_vars = realloc(scope->variables, sizeof(Value) * (scope->count + 1));
     if (new_vars == NULL)
     {
@@ -16,6 +17,7 @@ void add_variable(Scope *scope, Value var)
     scope->variables = new_vars;
     scope->variables[scope->count].type = var.type;
     scope->variables[scope->count].name = strdup(var.name);
+
     switch (var.type)
     {
     case VALUE_INT:
@@ -28,7 +30,6 @@ void add_variable(Scope *scope, Value var)
         scope->variables[scope->count].str_val = strdup(var.str_val);
         break;
     case VALUE_BOOL:
-        printf("scope length: %d - var name: %s - bool: %d\n", scope->count, var.name, var.bool_val);
         scope->variables[scope->count].bool_val = var.bool_val;
         break;
     case VALUE_ARRAY:
@@ -84,14 +85,12 @@ void add_variable(Scope *scope, Value var)
 
 int get_variable(Scope *scope, char *var_name, Scope **found)
 {
-
     Scope *current = scope;
     while (current != NULL)
     {
-
-        for (int index = 0; index < scope->count; index++)
+        for (int index = 0; index < current->count; index++)
         {
-            Value var = scope->variables[index];
+            Value var = current->variables[index];
 
             if (strcmp(var.name, var_name) == 0)
             {

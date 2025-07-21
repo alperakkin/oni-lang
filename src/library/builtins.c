@@ -2,16 +2,11 @@
 #include <string.h>
 #include "builtins.h"
 
-BuiltinFunction builtin_func[] = {
-    {"print", builtin_print},
-    {NULL, NULL}};
-
-Value builtin_print(Value *args, int arg_count)
+Value builtin_print(Value *args, Value *kwargs, int args_count, int kwargs_count)
 {
 
-    for (int i = 0; i < arg_count; ++i)
+    for (int i = 0; i < args_count; ++i)
     {
-
         switch (args[i].type)
         {
         case VALUE_INT:
@@ -56,17 +51,6 @@ Value builtin_print(Value *args, int arg_count)
     printf("\n");
     Value v;
     v.type = VALUE_NULL;
+    v.name = "print";
     return v;
-}
-
-BuiltinFunction *find_builtin(const char *name)
-{
-    for (int i = 0; builtin_func[i].name != NULL; ++i)
-    {
-        if (strcmp(builtin_func[i].name, name) == 0)
-        {
-            return &builtin_func[i];
-        }
-    }
-    return NULL;
 }
