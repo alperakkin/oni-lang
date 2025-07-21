@@ -1,8 +1,8 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 #include <stdbool.h>
-#include "value.h"
 #include "ast.h"
+#include "value.h"
 #include "variable.h"
 
 void type_check(Value val, Node *node);

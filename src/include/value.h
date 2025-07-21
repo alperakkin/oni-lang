@@ -1,7 +1,7 @@
 // value.h
 #pragma once
 #include <stdbool.h>
-
+#include "ast.h"
 typedef enum
 {
     VALUE_INT = 2000,       // 2000

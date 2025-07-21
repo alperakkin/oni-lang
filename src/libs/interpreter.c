@@ -352,9 +352,9 @@ Value interpret(Node *node, Scope *scope)
         Scope *found = init_scope(scope);
         char *name = strdup(node->func_call.name);
 
-        int index = get_variable(name, scope, found);
+        int index = get_variable(name, scope, &found);
 
-        Value *fn = found->variables[index].func_val->func;
+        Value *fn = found->variables[index].func_val;
         if (!fn)
             raise_error("Error: function not found", name);
 

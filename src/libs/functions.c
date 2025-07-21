@@ -6,16 +6,6 @@
 #include "functions.h"
 #include "builtins.h"
 
-void push_registry(FunctionRegistry *registry, Function *func)
-{
-    if (registry->count >= registry->capacity)
-    {
-        registry->capacity *= 2;
-        registry->functions = realloc(registry->functions, sizeof(Function) * registry->capacity);
-    }
-    registry->functions[registry->count++] = func;
-}
-
 void type_check(Value val, Node *node)
 {
     switch (val.type)
@@ -47,49 +37,12 @@ void type_check(Value val, Node *node)
     }
 }
 
-FunctionRegistry *init_function_registry()
-{
-    FunctionRegistry *registry = malloc(sizeof(FunctionRegistry));
-    registry->capacity = 8;
-    registry->count = 0;
-    registry->functions = malloc(sizeof(Function) * registry->capacity);
-
-    Function *print_func = malloc(sizeof(Function));
-    print_func->name = strdup("print");
-    print_func->is_builtin = true;
-    print_func->func = builtin_print;
-    push_registry(registry, print_func);
-    // TODO make a add register function to set all builtins at once
-    return registry;
-}
-
-Function *get_function(char *name, FunctionRegistry *registry)
-{
-    for (int i = 0; i < registry->count; ++i)
-    {
-        if (strcmp(registry->functions[i]->name, name) == 0)
-        {
-            return registry->functions[i];
-        }
-    }
-    return NULL;
-}
-
-void print_function(Function *func)
-{
-    printf("FUNCTION: \n");
-    printf("\tname: %s\n", func->name);
-    printf("\tbuiltin: %s\n", func->is_builtin == true ? "true" : "false");
-}
-
 Value call_function(
-    Function *fn,
+    ValueFunction *fn,
     Node **args, int args_count,
     Node **kwargs, int kwargs_count,
-    Scope *caller_scope,
-    FunctionRegistry *registry)
+    Scope *caller_scope)
 {
-
     if (fn == NULL)
     {
         raise_error("Function is not defined", "");
@@ -106,7 +59,7 @@ Value call_function(
 
         for (int i = 0; i < args_count; i++)
         {
-            evaluated_args[i] = interpret(args[i], caller_scope, registry);
+            evaluated_args[i] = interpret(args[i], caller_scope);
         }
 
         for (int i = 0; i < kwargs_count; i++)
@@ -116,7 +69,7 @@ Value call_function(
             if (kwarg_node.type != NODE_VARIABLE)
                 raise_error("Expected keyword argument to be variable", "");
 
-            evaluated_kwargs[i] = interpret(kwarg_node.variable.value, caller_scope, registry);
+            evaluated_kwargs[i] = interpret(kwarg_node.variable.value, caller_scope);
             evaluated_kwargs[i].name = strdup(kwarg_node.variable.name);
         }
 
@@ -127,11 +80,11 @@ Value call_function(
 
     for (int i = 0; i < args_count; i++)
     {
-        Value val = interpret(args[i], caller_scope, registry);
+        Value val = interpret(args[i], caller_scope);
 
         val.name = strdup(fn->args[i]->variable.name);
 
-        add_variable(caller_scope, val);
+        add_variable(caller_scope, &val);
     }
 
     for (int i = 0; i < kwargs_count; i++)
@@ -141,10 +94,10 @@ Value call_function(
         if (kwarg_node->type != NODE_VARIABLE)
             raise_error("Expected keyword argument to be variable", "");
 
-        Value val = interpret(kwarg_node->variable.value, caller_scope, registry);
+        Value val = interpret(kwarg_node->variable.value, caller_scope);
 
         val.name = strdup(kwarg_node->variable.name);
-        add_variable(caller_scope, val);
+        add_variable(caller_scope, &val);
     }
 
     // set default values
@@ -164,10 +117,10 @@ Value call_function(
         if (given)
             continue;
 
-        Value val = interpret(fn->kwargs[i]->variable.value, caller_scope, registry);
+        Value val = interpret(fn->kwargs[i]->variable.value, caller_scope);
         val.name = strdup(def_arg_name);
 
-        add_variable(caller_scope, val);
+        add_variable(caller_scope, &val);
     }
 
     Value last = {0};
@@ -178,12 +131,12 @@ Value call_function(
         Node *stmt = fn->block->statements[i];
         if (stmt->type == NODE_RETURN)
         {
-            Value return_val = interpret(stmt->node_return.expression, caller_scope, registry);
+            Value return_val = interpret(stmt->node_return.expression, caller_scope);
             type_check(return_val, fn->return_type);
             return return_val;
         }
 
-        last = interpret(stmt, caller_scope, registry);
+        last = interpret(stmt, caller_scope);
     }
 
     return last;

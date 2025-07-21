@@ -20,11 +20,10 @@ int main(int argc, char **argv)
     // print_node_block(ast);
 
     Scope *globals = init_scope(NULL);
-    FunctionRegistry *registry = init_function_registry();
 
     for (int i = 0; i < ast->count; i++)
     {
-        Value result = interpret(ast->statements[i], globals, registry);
+        Value result = interpret(ast->statements[i], globals);
     }
     // print_scope(globals);
 
