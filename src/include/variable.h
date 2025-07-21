@@ -10,7 +10,7 @@ typedef struct
 
 } Scope;
 
-void add_variable(Scope *scope, Value var);
+void add_variable(Scope *scope, Value *var);
 int get_variable(Scope *scope, char *var_name, Scope **found);
 void print_scope(Scope *scope);
 Scope *init_scope(Scope *parent);

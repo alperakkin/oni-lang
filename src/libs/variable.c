@@ -4,7 +4,7 @@
 #include "variable.h"
 #include "utils.h"
 
-void add_variable(Scope *scope, Value var)
+void add_variable(Scope *scope, Value *var)
 {
 
     Value *new_vars = realloc(scope->variables, sizeof(Value) * (scope->count + 1));
@@ -15,35 +15,35 @@ void add_variable(Scope *scope, Value var)
     }
 
     scope->variables = new_vars;
-    scope->variables[scope->count].type = var.type;
-    scope->variables[scope->count].name = strdup(var.name);
+    scope->variables[scope->count].type = var->type;
+    scope->variables[scope->count].name = strdup(var->name);
 
-    switch (var.type)
+    switch (var->type)
     {
     case VALUE_INT:
-        scope->variables[scope->count].int_val = var.int_val;
+        scope->variables[scope->count].int_val = var->int_val;
         break;
     case VALUE_FLOAT:
-        scope->variables[scope->count].float_val = var.float_val;
+        scope->variables[scope->count].float_val = var->float_val;
         break;
     case VALUE_STRING:
-        scope->variables[scope->count].str_val = strdup(var.str_val);
+        scope->variables[scope->count].str_val = strdup(var->str_val);
         break;
     case VALUE_BOOL:
-        scope->variables[scope->count].bool_val = var.bool_val;
+        scope->variables[scope->count].bool_val = var->bool_val;
         break;
     case VALUE_ARRAY:
-        scope->variables[scope->count].array_val.length = var.array_val.length;
-        scope->variables[scope->count].array_val.capacity = var.array_val.capacity;
-        scope->variables[scope->count].array_val.generic_type = strdup(var.array_val.generic_type);
-        int len = var.array_val.length;
-        scope->variables[scope->count].array_val.elements = malloc(sizeof(var.array_val) * len);
+        scope->variables[scope->count].array_val.length = var->array_val.length;
+        scope->variables[scope->count].array_val.capacity = var->array_val.capacity;
+        scope->variables[scope->count].array_val.generic_type = strdup(var->array_val.generic_type);
+        int len = var->array_val.length;
+        scope->variables[scope->count].array_val.elements = malloc(sizeof(var->array_val) * len);
         if (scope->variables[scope->count].array_val.elements == NULL)
             raise_error("Memory allocation failed for array elements\n", "");
 
         for (int i = 0; i < len; i++)
         {
-            Value *src_val = var.array_val.elements[i];
+            Value *src_val = var->array_val.elements[i];
 
             Value *new_val = malloc(sizeof(Value));
             if (!new_val)
@@ -78,7 +78,7 @@ void add_variable(Scope *scope, Value var)
     case VALUE_NULL:
         break;
     default:
-        raise_error("Can not assign variable", var.name);
+        raise_error("Can not assign variable", var->name);
     }
     scope->count++;
 }

@@ -6,7 +6,7 @@
 #include "value.h"
 #include "utils.h"
 
-Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
+Value interpret(Node *node, Scope *scope)
 {
     Value result;
     result.type = VALUE_NULL;
@@ -49,8 +49,8 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
     case NODE_BINARY_OP:
     {
 
-        Value left = interpret(node->binary_op.left, scope, registry);
-        Value right = interpret(node->binary_op.right, scope, registry);
+        Value left = interpret(node->binary_op.left, scope);
+        Value right = interpret(node->binary_op.right, scope);
         int is_float = (left.type == VALUE_FLOAT || right.type == VALUE_FLOAT);
         int assignment = node->binary_op.token->type == TK_ASSIGN;
 
@@ -201,14 +201,14 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
     case NODE_IF:
     {
 
-        Value condition = interpret(node->node_if.condition, scope, registry);
+        Value condition = interpret(node->node_if.condition, scope);
         if (condition.bool_val == true)
         {
             Scope *locals = init_scope(scope);
 
             for (int i = 0; i < node->node_if.if_block->count; i++)
             {
-                result = interpret(node->node_if.if_block->statements[i], locals, registry);
+                result = interpret(node->node_if.if_block->statements[i], locals);
             }
         }
         else
@@ -219,7 +219,7 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
 
                 for (int i = 0; i < node->node_if.else_block->count; i++)
                 {
-                    result = interpret(node->node_if.else_block->statements[i], locals, registry);
+                    result = interpret(node->node_if.else_block->statements[i], locals);
                 }
             }
         }
@@ -228,18 +228,18 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
     case NODE_WHILE:
     {
 
-        Value condition = interpret(node->node_while.condition, scope, registry);
+        Value condition = interpret(node->node_while.condition, scope);
         while (condition.bool_val != true)
         {
             for (int i = 0; i < node->node_while.if_block->count; i++)
             {
-                result = interpret(node->node_while.if_block->statements[i], scope, registry);
+                result = interpret(node->node_while.if_block->statements[i], scope);
                 if (result.type == VALUE_CONTROL_BREAK)
                     goto end_while;
                 else if (result.type == VALUE_CONTROL_CONTINUE)
                     break;
             }
-            condition = interpret(node->node_while.condition, scope, registry);
+            condition = interpret(node->node_while.condition, scope);
         }
     end_while:
         return result;
@@ -250,15 +250,15 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
 
         char *iter_name = strdup(node->node_for.iterator->identifier.value);
 
-        Value iterator = {0};
-        iterator.type = VALUE_INT;
-        iterator.int_val = 0;
-        iterator.name = iter_name;
+        Value *iterator = malloc(sizeof(Value));
+        iterator->type = VALUE_INT;
+        iterator->int_val = 0;
+        iterator->name = iter_name;
 
         add_variable(locals, iterator);
 
         int length = 0;
-        Value iterable = interpret(node->node_for.iterable, scope, registry);
+        Value iterable = interpret(node->node_for.iterable, scope);
 
         Scope *found_scope = NULL;
         int index = get_variable(locals, iter_name, &found_scope);
@@ -282,7 +282,7 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
 
                 for (int j = 0; j < node->node_for.for_block->count; j++)
                 {
-                    result = interpret(node->node_for.for_block->statements[j], locals, registry);
+                    result = interpret(node->node_for.for_block->statements[j], locals);
                     if (result.type == VALUE_CONTROL_BREAK)
                         goto end_for;
                     else if (result.type == VALUE_CONTROL_CONTINUE)
@@ -307,7 +307,7 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
 
                 for (int j = 0; j < node->node_for.for_block->count; j++)
                 {
-                    result = interpret(node->node_for.for_block->statements[j], locals, registry);
+                    result = interpret(node->node_for.for_block->statements[j], locals);
 
                     if (result.type == VALUE_CONTROL_BREAK)
                         goto end_for;
@@ -339,7 +339,7 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
         for (int i = 0; i < len; i++)
         {
             Value *val = malloc(sizeof(Value));
-            *val = interpret(node->array.elements[i], scope, registry);
+            *val = interpret(node->array.elements[i], scope);
             result.array_val.elements[i] = val;
         }
         return result;
@@ -349,10 +349,12 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
     {
 
         Scope *locals = init_scope(scope);
+        Scope *found = init_scope(scope);
         char *name = strdup(node->func_call.name);
 
-        Function *fn = get_function(name, registry);
+        int index = get_variable(name, scope, found);
 
+        Value *fn = found->variables[index].func_val->func;
         if (!fn)
             raise_error("Error: function not found", name);
 
@@ -362,8 +364,7 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
             node->func_call.args_count,
             node->func_call.kwargs,
             node->func_call.kwargs_count,
-            locals,
-            registry);
+            locals);
     }
 
     case NODE_IDENTIFIER:
@@ -420,64 +421,67 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
     case NODE_VARIABLE:
     {
         result.type = VALUE_VARIABLE;
-        Value var = {0};
+        Value *var = malloc(sizeof(Value));
         if (!node->variable.name)
             raise_error("Variable Name not assigned", "");
-        var.name = strdup(node->variable.name);
-        Value right = interpret(node->variable.value, scope, registry);
+        var->name = strdup(node->variable.name);
+        Value right = interpret(node->variable.value, scope);
 
         if (strcmp(node->variable.type, "int") == 0)
         {
             if (right.type == VALUE_NULL)
-                var.type = VALUE_NULL;
+                var->type = VALUE_NULL;
             else
             {
-                var.int_val = (right.type == VALUE_FLOAT) ? (int)right.float_val : right.int_val;
-                var.type = VALUE_INT;
+                var->int_val = (right.type == VALUE_FLOAT) ? (int)right.float_val : right.int_val;
+                var->type = VALUE_INT;
             }
         }
         else if (strcmp(node->variable.type, "str") == 0)
         {
-            var.str_val = strdup(right.str_val);
-            var.type = VALUE_STRING;
+            var->str_val = strdup(right.str_val);
+            var->type = VALUE_STRING;
         }
         else if (strcmp(node->variable.type, "float") == 0)
         {
-            var.float_val = (right.type == VALUE_INT) ? (float)right.int_val : right.float_val;
-            var.type = VALUE_FLOAT;
+            var->float_val = (right.type == VALUE_INT) ? (float)right.int_val : right.float_val;
+            var->type = VALUE_FLOAT;
         }
         else if (strcmp(node->variable.type, "bool") == 0)
         {
-            var.bool_val = right.bool_val;
-            var.type = VALUE_BOOL;
+            var->bool_val = right.bool_val;
+            var->type = VALUE_BOOL;
         }
         else if (strcmp(node->variable.type, "arr") == 0)
         {
-            var.array_val = right.array_val;
-            var.type = VALUE_ARRAY;
-            var.array_val.generic_type = strdup(right.array_val.generic_type);
+            var->array_val = right.array_val;
+            var->type = VALUE_ARRAY;
+            var->array_val.generic_type = strdup(right.array_val.generic_type);
         }
 
         add_variable(scope, var);
 
         return result;
     }
+    case NODE_CLASS:
+        raise_error("NOT IMPLEMENTED", "CLASS");
     case NODE_FUNCTION_DEF:
     {
         char *name = strdup(node->func_def.name);
 
-        Function *func = malloc(sizeof(Function));
-        func->name = name;
-        func->is_builtin = false;
-        func->func = NULL;
-        func->block = node->func_def.func_block;
-        func->args = node->func_def.args;
-        func->args_count = node->func_def.args_count;
-        func->kwargs = node->func_def.kwargs;
-        func->kwargs_count = node->func_def.kwargs_count;
-        func->return_type = node->func_def.return_type;
+        Value *val = malloc(sizeof(Value));
+        val->type = VALUE_FUNCTION;
+        val->func_val->name = name;
+        val->func_val->is_builtin = false;
+        val->func_val->func = NULL;
+        val->func_val->block = node->func_def.func_block;
+        val->func_val->args = node->func_def.args;
+        val->func_val->args_count = node->func_def.args_count;
+        val->func_val->kwargs = node->func_def.kwargs;
+        val->func_val->kwargs_count = node->func_def.kwargs_count;
+        val->func_val->return_type = node->func_def.return_type;
 
-        add_function(registry, func);
+        add_variable(scope, val);
 
         Value result = {0};
         result.type = VALUE_NULL;
@@ -485,7 +489,7 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
     }
     case NODE_RETURN:
     {
-        result = interpret(node, scope, registry);
+        result = interpret(node, scope);
         result.type = VALUE_RETURN;
         return result;
     }

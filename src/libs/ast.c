@@ -910,13 +910,13 @@ void print_node(Node *node, int level)
         for (int i = 0; i < node->func_def.args_count; i++)
         {
             printf("Arguments (%d):\n", node->func_def.args_count);
-            print_node(node->func_def.args[i], level + 1);
+            printf("Argument Name: %s\n", node->func_def.args[i]->variable.name);
         }
 
         printf("Optional Arguments (%d):\n", node->func_def.kwargs_count);
         for (int i = 0; i < node->func_def.kwargs_count; i++)
         {
-            print_node(node->func_def.kwargs[i], level + 1);
+            printf("Optional Argument Name: %s\n", node->func_def.kwargs[i]->variable.name);
         }
         print_node(node->func_def.return_type, level + 1);
         print_node_block(node->func_def.func_block);
@@ -990,6 +990,9 @@ void print_node(Node *node, int level)
     case NODE_RETURN:
         printf("Node Return\n");
         print_node(node->node_return.expression, 0);
+        break;
+    case NODE_THIS:
+        printf("Node This\n");
         break;
     default:
         printf(": %d\n", node->type);

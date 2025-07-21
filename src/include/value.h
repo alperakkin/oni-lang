@@ -14,6 +14,7 @@ typedef enum
     VALUE_CONTROL_BREAK,    // 2007
     VALUE_CONTROL_CONTINUE, // 2008
     VALUE_RETURN,           // 2009
+    VALUE_FUNCTION,         // 2010
 } ValueType;
 
 typedef struct Value Value;
@@ -26,6 +27,18 @@ typedef struct ValueArray
     char *generic_type;
 } ValueArray;
 
+typedef struct
+{
+    const char *name;
+    bool is_builtin;
+    Value (*func)(Value *args, Value *kwargs, int arg_count, int kwarg_count);
+    NodeBlock *block;
+    Node **args;
+    int args_count;
+    Node **kwargs;
+    int kwargs_count;
+    Node *return_type;
+} ValueFunction;
 struct Value
 {
     ValueType type;
@@ -38,5 +51,6 @@ struct Value
         bool bool_val;
         bool null_val;
         ValueArray array_val;
+        ValueFunction *func_val;
     };
 };

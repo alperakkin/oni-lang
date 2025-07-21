@@ -6,7 +6,7 @@
 #include "functions.h"
 #include "builtins.h"
 
-void add_function(FunctionRegistry *registry, Function *func)
+void push_registry(FunctionRegistry *registry, Function *func)
 {
     if (registry->count >= registry->capacity)
     {
@@ -58,7 +58,7 @@ FunctionRegistry *init_function_registry()
     print_func->name = strdup("print");
     print_func->is_builtin = true;
     print_func->func = builtin_print;
-    add_function(registry, print_func);
+    push_registry(registry, print_func);
     // TODO make a add register function to set all builtins at once
     return registry;
 }

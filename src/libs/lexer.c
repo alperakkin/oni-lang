@@ -545,7 +545,7 @@ Token *tokenize(const char *source)
 
         else if (current_char == '.')
         {
-            append_token(&head, TK_DOT, (TokenValue){0}, &current_char);
+            append_token(&head, TK_DOT, (TokenValue){0}, ".");
             cursor++;
         }
         else if (current_char == ' ')

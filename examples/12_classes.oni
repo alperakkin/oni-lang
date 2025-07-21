@@ -6,8 +6,6 @@ class car
         this.speed = speed
     }
 
-
-
     @add_speed(){
         this.speed++
     }
