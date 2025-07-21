@@ -475,6 +475,7 @@ Value interpret(Node *node, Scope *scope, FunctionRegistry *registry)
         func->args_count = node->func_def.args_count;
         func->kwargs = node->func_def.kwargs;
         func->kwargs_count = node->func_def.kwargs_count;
+        func->return_type = node->func_def.return_type;
 
         add_function(registry, func);
 

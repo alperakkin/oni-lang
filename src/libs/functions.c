@@ -16,6 +16,37 @@ void add_function(FunctionRegistry *registry, Function *func)
     registry->functions[registry->count++] = func;
 }
 
+void type_check(Value val, Node *node)
+{
+    switch (val.type)
+    {
+    case VALUE_INT:
+        if (strcmp(node->identifier.value, "int") != 0)
+            raise_error("Invalid Return Type  got <int> but expected ", strdup(node->identifier.value));
+        break;
+    case VALUE_STRING:
+        if (strcmp(node->identifier.value, "str") != 0)
+            raise_error("Invalid Return Type  got <str> but expected ", strdup(node->identifier.value));
+        break;
+    case VALUE_ARRAY:
+        if (strcmp(node->identifier.value, "arr") != 0)
+            raise_error("Invalid Return Type  got <arr> but expected ", strdup(node->identifier.value));
+        break;
+    case VALUE_BOOL:
+        if (strcmp(node->identifier.value, "bool") != 0)
+            raise_error("Invalid Return Type  got <bool> but expected ", strdup(node->identifier.value));
+        break;
+    case VALUE_FLOAT:
+        if (strcmp(node->identifier.value, "float") != 0)
+            raise_error("Invalid Return Type  got <float> but expected ", strdup(node->identifier.value));
+        break;
+
+    default:
+        raise_error("Undefined return type", "");
+        break;
+    }
+}
+
 FunctionRegistry *init_function_registry()
 {
     FunctionRegistry *registry = malloc(sizeof(FunctionRegistry));
@@ -146,7 +177,11 @@ Value call_function(
     {
         Node *stmt = fn->block->statements[i];
         if (stmt->type == NODE_RETURN)
-            return interpret(stmt->node_return.expression, caller_scope, registry);
+        {
+            Value return_val = interpret(stmt->node_return.expression, caller_scope, registry);
+            type_check(return_val, fn->return_type);
+            return return_val;
+        }
 
         last = interpret(stmt, caller_scope, registry);
     }

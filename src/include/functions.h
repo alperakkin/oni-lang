@@ -15,6 +15,7 @@ typedef struct
     int args_count;
     Node **kwargs;
     int kwargs_count;
+    Node *return_type;
 } Function;
 
 typedef struct
@@ -30,10 +31,12 @@ FunctionRegistry *init_function_registry();
 void add_function(FunctionRegistry *registry, Function *func);
 Function *get_function(char *name, FunctionRegistry *registry);
 void print_function(Function *func);
+void type_check(Value val, Node *node);
 Value call_function(
     Function *fn,
     Node **args, int args_count,
     Node **kwargs, int kwargs_count,
     Scope *caller_scope,
     FunctionRegistry *registry);
+
 #endif
