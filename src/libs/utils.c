@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 
 bool is_oni_file(char *filename)
 {
@@ -58,4 +59,14 @@ char *read_file(char *filename)
     buffer[filesize] = '\0';
     fclose(file);
     return buffer;
+}
+
+int is_identifier_start(char c)
+{
+    return (c == '_') || isalpha(c);
+}
+
+int is_identifier_char(char c)
+{
+    return (c == '_') || isalnum(c);
 }

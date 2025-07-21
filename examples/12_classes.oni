@@ -1,0 +1,25 @@
+class car
+{
+    @car(str name, int speed)
+    {
+        this.name = name
+        this.speed = speed
+    }
+
+
+
+    @add_speed(){
+        this.speed++
+    }
+
+    @info(){
+        print("Car Info")
+        print("--------")
+        print(this.name)
+        print(this.speed)
+    }
+
+}
+
+obj c = Car("Ferrari", 2)
+c.info()

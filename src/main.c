@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     Parser parser;
     parser.current = tokens;
     NodeBlock *ast = parse(&parser);
-    // print_node_block(ast);
+    print_node_block(ast);
 
     Scope *globals = init_scope(NULL);
     FunctionRegistry *registry = init_function_registry();

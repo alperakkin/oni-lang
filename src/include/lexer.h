@@ -52,6 +52,10 @@ typedef enum
     TK_RETURN,
     TK_BREAK,
     TK_CONTINUE,
+    TK_CLASS,
+    TK_THIS,
+    TK_OBJ,
+    TK_DOT,
 } TokenType;
 
 typedef union

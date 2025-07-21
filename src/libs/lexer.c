@@ -222,6 +222,22 @@ void print_token(Token *token)
     {
         printf("TOKEN [DECREMENT] -> %s\n", token->symbol);
     }
+    else if (token->type == TK_CLASS)
+    {
+        printf("TOKEN [CLASS] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_OBJ)
+    {
+        printf("TOKEN [OBJECT] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_THIS)
+    {
+        printf("TOKEN [THIS] -> %s\n", token->symbol);
+    }
+    else if (token->type == TK_DOT)
+    {
+        printf("TOKEN [DOT] -> %s\n", token->symbol);
+    }
     else if (token->type == TK_NULL)
     {
         printf("TOKEN [NULL] -> %s\n", "null");
@@ -380,7 +396,10 @@ void handle_identifier(const char *source, int *cursor, Token **head)
 {
     int start = *cursor;
 
-    while (isalpha(source[*cursor]))
+    if (!is_identifier_start(source[*cursor]))
+        return;
+
+    while (is_identifier_char(source[*cursor]))
     {
 
         (*cursor)++;
@@ -462,6 +481,21 @@ void handle_identifier(const char *source, int *cursor, Token **head)
         append_token(head, TK_BREAK, (TokenValue){0}, name);
         return;
     }
+    else if (strcmp(name, "class") == 0)
+    {
+        append_token(head, TK_CLASS, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "obj") == 0)
+    {
+        append_token(head, TK_OBJ, (TokenValue){0}, name);
+        return;
+    }
+    else if (strcmp(name, "this") == 0)
+    {
+        append_token(head, TK_THIS, (TokenValue){0}, name);
+        return;
+    }
 
     val.identifier = name;
 
@@ -509,6 +543,11 @@ Token *tokenize(const char *source)
             handle_equals(source, &cursor, &head);
         }
 
+        else if (current_char == '.')
+        {
+            append_token(&head, TK_DOT, (TokenValue){0}, &current_char);
+            cursor++;
+        }
         else if (current_char == ' ')
         {
             append_token(&head, TK_SPACE, (TokenValue){0}, &current_char);

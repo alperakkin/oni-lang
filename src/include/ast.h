@@ -11,24 +11,26 @@ typedef struct
 
 typedef enum
 {
-    NODE_NUMBER,        // 0
-    NODE_STRING,        // 1
-    NODE_BINARY_OP,     // 2
-    NODE_UNARY_OP,      // 3
-    NODE_FUNCTION_CALL, // 4
-    NODE_IDENTIFIER,    // 5
-    NODE_BLOCK,         // 6
-    NODE_VARIABLE,      // 7
-    NODE_NULL,          // 8
-    NODE_BOOL,          // 9
-    NODE_ARRAY,         // 10
-    NODE_IF,            // 11
-    NODE_WHILE,         // 12
-    NODE_FOR,           // 13
-    NODE_CONTINUE,      // 14
-    NODE_BREAK,         // 15
-    NODE_FUNCTION_DEF,  // 16
-    NODE_RETURN,        // 17
+    NODE_NUMBER = 1000, // 1000
+    NODE_STRING,        // 1001
+    NODE_BINARY_OP,     // 1002
+    NODE_UNARY_OP,      // 1003
+    NODE_FUNCTION_CALL, // 1004
+    NODE_IDENTIFIER,    // 1005
+    NODE_BLOCK,         // 1006
+    NODE_VARIABLE,      // 1007
+    NODE_NULL,          // 1008
+    NODE_BOOL,          // 1009
+    NODE_ARRAY,         // 1010
+    NODE_IF,            // 1011
+    NODE_WHILE,         // 1012
+    NODE_FOR,           // 1013
+    NODE_CONTINUE,      // 1014
+    NODE_BREAK,         // 1015
+    NODE_FUNCTION_DEF,  // 1016
+    NODE_RETURN,        // 1017
+    NODE_CLASS,         // 1018
+    NODE_THIS,          // 1019
 } NodeType;
 
 typedef enum
@@ -142,6 +144,13 @@ typedef struct
     NodeBlock *for_block;
 } NodeFor;
 
+typedef struct
+{
+    char *name;
+    NodeBlock *methods;
+
+} NodeClass;
+
 struct Node
 {
     NodeType type;
@@ -164,6 +173,7 @@ struct Node
         NodeWhile node_while;
         NodeFor node_for;
         NodeReturn node_return;
+        NodeClass node_class;
     };
 };
 

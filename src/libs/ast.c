@@ -175,7 +175,29 @@ Node *parse_primary(Parser *parser)
 
         return return_node;
     }
+    if (token->type == TK_CLASS)
+    {
+        Node *node = malloc(sizeof(Node));
+        advance(parser);
+        node->node_class.name = strdup(parser->current->symbol);
+        advance(parser);
+        skip_comment(parser);
+        skip_new_line(parser);
+        if (parser->current->type != TK_L_CURL)
+            raise_error("Class block must be started with '{'", "");
+        advance(parser);
+        node->node_class.methods = parse(parser);
+        node->type = NODE_CLASS;
 
+        return node;
+    }
+    if (token->type == TK_THIS)
+    {
+        Node *node = malloc(sizeof(Node));
+        node->type = NODE_THIS;
+        advance(parser);
+        return node;
+    }
     if (token->type == TK_IDENTIFIER)
     {
         Token *identifier_token = token;
@@ -879,6 +901,10 @@ void print_node(Node *node, int level)
         print_node(node->unary_op.operand, level + 1);
         break;
 
+    case NODE_CLASS:
+        printf("Class: %s ->\n", node->node_class.name);
+        print_node_block(node->node_class.methods);
+        break;
     case NODE_FUNCTION_DEF:
         printf("FunctionDef: %s ->\n", node->func_def.name);
         for (int i = 0; i < node->func_def.args_count; i++)
