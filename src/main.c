@@ -20,6 +20,7 @@ int main(int argc, char **argv)
     // print_node_block(ast);
 
     Scope *globals = init_scope(NULL);
+    register_builtins(globals);
 
     for (int i = 0; i < ast->count; i++)
     {

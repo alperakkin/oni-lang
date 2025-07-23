@@ -349,15 +349,17 @@ Value interpret(Node *node, Scope *scope)
     {
 
         Scope *locals = init_scope(scope);
-        Scope *found = init_scope(scope);
+        Scope *found = NULL;
         char *name = strdup(node->func_call.name);
 
-        int index = get_variable(name, scope, &found);
+        int index = get_variable(scope, name, &found); // get function from scope
 
-        Value *fn = found->variables[index].func_val;
+        if (index == -1)
+            raise_error("Error variable not found: %s", name);
+
+        ValueFunction *fn = found->variables[index].func_val;
         if (!fn)
             raise_error("Error: function not found", name);
-
         return call_function(
             fn,
             node->func_call.args,
@@ -467,9 +469,11 @@ Value interpret(Node *node, Scope *scope)
         raise_error("NOT IMPLEMENTED", "CLASS");
     case NODE_FUNCTION_DEF:
     {
+
         char *name = strdup(node->func_def.name);
 
         Value *val = malloc(sizeof(Value));
+        val->func_val = malloc(sizeof(ValueFunction));
         val->type = VALUE_FUNCTION;
         val->func_val->name = name;
         val->func_val->is_builtin = false;

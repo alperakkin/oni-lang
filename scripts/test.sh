@@ -1,6 +1,6 @@
 #!/bin/sh
-
-for file in examples/*.oni; do
+make
+for file in $(find examples -name '*.oni' | sort -V); do
   echo "Testing: $file"
   echo "--------------"
   ./bin/oni "$file"

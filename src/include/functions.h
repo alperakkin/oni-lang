@@ -12,4 +12,5 @@ Value call_function(
     Node **kwargs, int kwargs_count,
     Scope *caller_scope);
 
+Value create_builtin_function(const char *name, Value (*func)(Value *, Value *, int, int));
 #endif

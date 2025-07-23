@@ -3,6 +3,7 @@
 #include <string.h>
 #include "variable.h"
 #include "utils.h"
+#include "builtins.h"
 
 void add_variable(Scope *scope, Value *var)
 {
@@ -75,6 +76,22 @@ void add_variable(Scope *scope, Value *var)
                 .array_val.elements[i] = new_val;
         }
         break;
+
+    case VALUE_FUNCTION:
+    {
+
+        ValueFunction *src_func = var->func_val; // burası eksik
+        ValueFunction *new_func = malloc(sizeof(ValueFunction));
+        if (!new_func)
+            raise_error("Memory allocation failed for function\n", "");
+
+        *new_func = *src_func;
+        new_func->name = strdup(src_func->name);
+
+        scope->variables[scope->count].func_val = new_func;
+
+        break;
+    }
     case VALUE_NULL:
         break;
     default:
@@ -83,11 +100,19 @@ void add_variable(Scope *scope, Value *var)
     scope->count++;
 }
 
+void register_builtins(Scope *global_scope)
+{
+    Value builtin = create_builtin_function("print", builtin_print);
+
+    add_variable(global_scope, &builtin);
+}
+
 int get_variable(Scope *scope, char *var_name, Scope **found)
 {
     Scope *current = scope;
     while (current != NULL)
     {
+
         for (int index = 0; index < current->count; index++)
         {
             Value var = current->variables[index];
@@ -112,10 +137,10 @@ Scope *init_scope(Scope *parent)
     return scope;
 }
 
-void print_scope(Scope *scope)
+void print_scope(Scope *scope, char *name)
 {
 
-    printf("globals = {\n");
+    printf("%s = {\n", name);
     for (int i = 0; i < scope->count; i++)
     {
         Value var = scope->variables[i];
@@ -141,6 +166,11 @@ void print_scope(Scope *scope)
         {
             printf("    %s (bool): ", var.name);
             printf("%s,\n", var.bool_val == 1 ? "true" : "false");
+        }
+        else if (var.type == VALUE_FUNCTION)
+        {
+            printf("    %s (function): ", var.name);
+            printf("<%s>,\n", var.name);
         }
         else if (var.type == VALUE_NULL)
         {

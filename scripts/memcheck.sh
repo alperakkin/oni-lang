@@ -1,0 +1,1 @@
+make && leaks -atExit -- ./bin/oni $1

@@ -37,6 +37,27 @@ void type_check(Value val, Node *node)
     }
 }
 
+Value create_builtin_function(const char *name, Value (*func)(Value *, Value *, int, int))
+{
+    Value val;
+    val.type = VALUE_FUNCTION;
+    val.name = strdup(name);
+
+    ValueFunction *f = malloc(sizeof(ValueFunction));
+    f->name = strdup(name);
+    f->is_builtin = true;
+    f->func = func;
+    f->block = NULL;
+    f->args = NULL;
+    f->args_count = 0;
+    f->kwargs = NULL;
+    f->kwargs_count = 0;
+    f->return_type = NULL;
+
+    val.func_val = f;
+    return val;
+}
+
 Value call_function(
     ValueFunction *fn,
     Node **args, int args_count,
