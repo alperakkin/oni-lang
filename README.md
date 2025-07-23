@@ -4,6 +4,9 @@
 
 > ⚠️ OniLang is **not production-safe**. Memory safety and performance optimizations are not guaranteed. It is a **work-in-progress** and welcomes contributions and ideas.
 
+<p align="center">
+<img src="https://github.com/alperakkin/oni-lang/blob/main/public/oni.jpg" style="display: block; margin: auto;self-align:center;" width="600">
+</p>
 ---
 ## 🧙 About the Name
 Oni (鬼) are mythological creatures from Japanese and Korean folklore, often depicted as horned ogres or demons. While traditionally seen as fearsome, they are also symbolic of inner strength and transformation. OniLang takes inspiration from this concept — a small but mighty language, simple on the outside but capable of evolving and growing with contributions from the community.

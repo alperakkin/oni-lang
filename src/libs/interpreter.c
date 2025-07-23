@@ -475,6 +475,7 @@ Value interpret(Node *node, Scope *scope)
         Value *val = malloc(sizeof(Value));
         val->func_val = malloc(sizeof(ValueFunction));
         val->type = VALUE_FUNCTION;
+        val->name = name;
         val->func_val->name = name;
         val->func_val->is_builtin = false;
         val->func_val->func = NULL;
@@ -484,7 +485,6 @@ Value interpret(Node *node, Scope *scope)
         val->func_val->kwargs = node->func_def.kwargs;
         val->func_val->kwargs_count = node->func_def.kwargs_count;
         val->func_val->return_type = node->func_def.return_type;
-
         add_variable(scope, val);
 
         Value result = {0};
