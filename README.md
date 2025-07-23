@@ -5,7 +5,7 @@
 > ⚠️ OniLang is **not production-safe**. Memory safety and performance optimizations are not guaranteed. It is a **work-in-progress** and welcomes contributions and ideas.
 
 <p align="center">
-<img src="https://github.com/alperakkin/oni-lang/blob/main/public/oni.jpg" style="display: block; margin: auto;self-align:center;" width="600">
+<img src="https://github.com/alperakkin/oni-lang/blob/main/public/image.jpg" style="display: block; margin: auto;self-align:center;" width="600">
 </p>
 ---
 ## 🧙 About the Name
