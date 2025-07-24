@@ -15,6 +15,8 @@ typedef enum
     VALUE_CONTROL_CONTINUE, // 2008
     VALUE_RETURN,           // 2009
     VALUE_FUNCTION,         // 2010
+    VALUE_CLASS,            // 2011
+    VALUE_OBJ,              // 2012
 } ValueType;
 
 typedef struct Value Value;
@@ -31,6 +33,7 @@ typedef struct
 {
     const char *name;
     bool is_builtin;
+    bool is_class_method;
     Value (*func)(Value *args, Value *kwargs, int arg_count, int kwarg_count);
     NodeBlock *block;
     Node **args;
@@ -39,6 +42,16 @@ typedef struct
     int kwargs_count;
     Node *return_type;
 } ValueFunction;
+
+typedef struct
+{
+    const char *name;
+    ValueFunction **methods;
+    int method_count;
+    Value **attrs;
+    int attr_count;
+} ValueObject;
+
 struct Value
 {
     ValueType type;
@@ -52,5 +65,7 @@ struct Value
         bool null_val;
         ValueArray array_val;
         ValueFunction *func_val;
+        ValueObject *obj_val;
+        Value *bound_instance;
     };
 };

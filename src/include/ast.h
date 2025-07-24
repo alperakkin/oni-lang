@@ -29,8 +29,9 @@ typedef enum
     NODE_BREAK,         // 1015
     NODE_FUNCTION_DEF,  // 1016
     NODE_RETURN,        // 1017
-    NODE_CLASS,         // 1018
+    NODE_CLASS_DEF,     // 1018
     NODE_THIS,          // 1019
+    NODE_OBJ,           // 1020
 } NodeType;
 
 typedef enum
@@ -173,7 +174,7 @@ struct Node
         NodeWhile node_while;
         NodeFor node_for;
         NodeReturn node_return;
-        NodeClass node_class;
+        NodeClass NODE_CLASS_DEF;
     };
 };
 

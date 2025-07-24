@@ -75,8 +75,7 @@ void skip_comment(Parser *parser)
 bool is_variable(Token *token)
 {
     char *identifier = token->value.identifier;
-
-    char *var_list[] = {"int", "float", "str", "bool", "arr"};
+    char *var_list[] = {"int", "float", "str", "bool", "arr", "obj"};
     size_t var_len = sizeof(var_list) / sizeof(var_list[0]);
     for (size_t i = 0; i < var_len; i++)
     {
@@ -153,6 +152,7 @@ Node *parse_primary(Parser *parser)
         node->boolean.value = token->value.bool_val;
         return node;
     }
+
     if (token->type == TK_NULL)
     {
         advance(parser);
@@ -179,16 +179,18 @@ Node *parse_primary(Parser *parser)
     {
         Node *node = malloc(sizeof(Node));
         advance(parser);
-        node->node_class.name = strdup(parser->current->symbol);
+        node->NODE_CLASS_DEF.name = strdup(parser->current->symbol);
         advance(parser);
         skip_comment(parser);
         skip_new_line(parser);
         if (parser->current->type != TK_L_CURL)
             raise_error("Class block must be started with '{'", "");
         advance(parser);
-        node->node_class.methods = parse(parser);
-        node->type = NODE_CLASS;
-
+        node->NODE_CLASS_DEF.methods = parse(parser);
+        node->type = NODE_CLASS_DEF;
+        if (parser->current->type != TK_R_CURL)
+            raise_error("Class block must be completed with '}'", "");
+        advance(parser);
         return node;
     }
     if (token->type == TK_THIS)
@@ -901,22 +903,22 @@ void print_node(Node *node, int level)
         print_node(node->unary_op.operand, level + 1);
         break;
 
-    case NODE_CLASS:
-        printf("Class: %s ->\n", node->node_class.name);
-        print_node_block(node->node_class.methods);
+    case NODE_CLASS_DEF:
+        printf("Class: %s ->\n", node->NODE_CLASS_DEF.name);
+        print_node_block(node->NODE_CLASS_DEF.methods);
         break;
     case NODE_FUNCTION_DEF:
         printf("FunctionDef: %s ->\n", node->func_def.name);
+        printf("\tArguments (%d):\n", node->func_def.args_count);
         for (int i = 0; i < node->func_def.args_count; i++)
         {
-            printf("Arguments (%d):\n", node->func_def.args_count);
-            printf("Argument Name: %s\n", node->func_def.args[i]->variable.name);
+            printf("\t\t%s\n", node->func_def.args[i]->variable.name);
         }
 
-        printf("Optional Arguments (%d):\n", node->func_def.kwargs_count);
+        printf("\tOptional Arguments (%d):\n", node->func_def.kwargs_count);
         for (int i = 0; i < node->func_def.kwargs_count; i++)
         {
-            printf("Optional Argument Name: %s\n", node->func_def.kwargs[i]->variable.name);
+            printf("\t\t%s\n", node->func_def.kwargs[i]->variable.name);
         }
         print_node(node->func_def.return_type, level + 1);
         print_node_block(node->func_def.func_block);
@@ -924,16 +926,16 @@ void print_node(Node *node, int level)
     case NODE_FUNCTION_CALL:
         printf("FunctionCall: %s ->\n", strdup(node->func_call.name));
 
+        printf("\tArguments (%d):\n", node->func_call.args_count);
         for (int i = 0; i < node->func_call.args_count; i++)
         {
-            printf("Arguments (%d):\n", node->func_call.args_count);
-            print_node(node->func_call.args[i], level + 1);
+            printf("\t\t%s\n", node->func_call.args[i]->variable.name);
         }
 
-        printf("Optional Arguments (%d):\n", node->func_call.kwargs_count);
+        printf("\tOptional Arguments (%d):\n", node->func_call.kwargs_count);
         for (int i = 0; i < node->func_call.kwargs_count; i++)
         {
-            print_node(node->func_call.kwargs[i], level + 1);
+            printf("\t\t%s\n", node->func_call.kwargs[i]->variable.name);
         }
         break;
 
@@ -989,7 +991,10 @@ void print_node(Node *node, int level)
         break;
     case NODE_RETURN:
         printf("Node Return\n");
-        print_node(node->node_return.expression, 0);
+        print_node(node->node_return.expression, 1);
+        break;
+    case NODE_OBJ:
+        printf("Node Obj\n");
         break;
     case NODE_THIS:
         printf("Node This\n");

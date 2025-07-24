@@ -226,10 +226,7 @@ void print_token(Token *token)
     {
         printf("TOKEN [CLASS] -> %s\n", token->symbol);
     }
-    else if (token->type == TK_OBJ)
-    {
-        printf("TOKEN [OBJECT] -> %s\n", token->symbol);
-    }
+
     else if (token->type == TK_THIS)
     {
         printf("TOKEN [THIS] -> %s\n", token->symbol);
@@ -486,11 +483,7 @@ void handle_identifier(const char *source, int *cursor, Token **head)
         append_token(head, TK_CLASS, (TokenValue){0}, name);
         return;
     }
-    else if (strcmp(name, "obj") == 0)
-    {
-        append_token(head, TK_OBJ, (TokenValue){0}, name);
-        return;
-    }
+
     else if (strcmp(name, "this") == 0)
     {
         append_token(head, TK_THIS, (TokenValue){0}, name);

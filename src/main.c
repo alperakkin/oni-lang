@@ -24,9 +24,14 @@ int main(int argc, char **argv)
 
     for (int i = 0; i < ast->count; i++)
     {
-        Value result = interpret(ast->statements[i], globals);
+        Node *stmt = ast->statements[i];
+
+        Value result = interpret(stmt, globals);
+
+        if (stmt->type == NODE_FUNCTION_DEF || stmt->type == NODE_CLASS_DEF)
+            add_variable(globals, &result);
     }
-    // print_scope(globals);
+    // print_scope(globals, "globals");
 
     free_tokens(tokens);
     free_node(ast);

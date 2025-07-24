@@ -19,5 +19,13 @@ class car
 
 }
 
-obj c = Car("Ferrari", 2)
-c.info()
+int a = 1
+obj c = car("Ferrari", 2)
+!:c.add_speed()
+!:c.info()
+
+!:obj d = car("Maserati", 3)
+!:d.info()
+
+!:print(c)
+!:print(d)

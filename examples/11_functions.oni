@@ -17,4 +17,3 @@ int z = sum(2, b=4)
 print(z)
 
 print(sum(1))
-

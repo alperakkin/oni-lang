@@ -101,6 +101,7 @@ Value call_function(
 
     for (int i = 0; i < args_count; i++)
     {
+
         Value val = interpret(args[i], caller_scope);
 
         val.name = strdup(fn->args[i]->variable.name);
