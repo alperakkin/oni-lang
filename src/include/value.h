@@ -17,6 +17,7 @@ typedef enum
     VALUE_FUNCTION,         // 2010
     VALUE_CLASS,            // 2011
     VALUE_OBJ,              // 2012
+    VALUE_THIS,             // 2013
 } ValueType;
 
 typedef struct Value Value;
@@ -40,6 +41,7 @@ typedef struct
     int args_count;
     Node **kwargs;
     int kwargs_count;
+    Value *bound_instance;
     Node *return_type;
 } ValueFunction;
 
@@ -50,12 +52,14 @@ typedef struct
     int method_count;
     Value **attrs;
     int attr_count;
+    int attr_capacity;
 } ValueObject;
 
 struct Value
 {
     ValueType type;
     char *name;
+    Value *bound_instance;
     union
     {
         int int_val;
@@ -66,6 +70,5 @@ struct Value
         ValueArray array_val;
         ValueFunction *func_val;
         ValueObject *obj_val;
-        Value *bound_instance;
     };
 };

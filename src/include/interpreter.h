@@ -4,5 +4,5 @@
 #include "variable.h"
 #include "functions.h"
 
-Value interpret(Node *node, Scope *scope);
-void print_value(Value v);
+Value interpret(Node *node, Scope *scope, Value *this);
+void print_value(Value *v);

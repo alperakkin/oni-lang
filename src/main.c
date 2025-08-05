@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     {
         Node *stmt = ast->statements[i];
 
-        Value result = interpret(stmt, globals);
+        Value result = interpret(stmt, globals, NULL);
 
         if (stmt->type == NODE_FUNCTION_DEF || stmt->type == NODE_CLASS_DEF)
             add_variable(globals, &result);

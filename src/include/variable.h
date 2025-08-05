@@ -10,8 +10,10 @@ typedef struct
 
 } Scope;
 
+Value *get_attribute(Value *obj, char *name);
+void set_attribute(Value *obj, char *name, Value *val);
 ValueFunction *find_method(ValueObject *class, const char *method_name);
-Value create_instance(ValueObject *class);
+Value create_instance(ValueObject *class, Scope *scope);
 void add_variable(Scope *scope, Value *var);
 void register_builtins(Scope *global_scope);
 int get_variable(Scope *scope, char *var_name, Scope **found);

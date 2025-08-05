@@ -64,6 +64,7 @@ Value call_function(
     Node **kwargs, int kwargs_count,
     Scope *caller_scope)
 {
+
     if (fn == NULL)
     {
         raise_error("Function is not defined", "");
@@ -80,7 +81,7 @@ Value call_function(
 
         for (int i = 0; i < args_count; i++)
         {
-            evaluated_args[i] = interpret(args[i], caller_scope);
+            evaluated_args[i] = interpret(args[i], caller_scope, NULL);
         }
 
         for (int i = 0; i < kwargs_count; i++)
@@ -90,7 +91,7 @@ Value call_function(
             if (kwarg_node.type != NODE_VARIABLE)
                 raise_error("Expected keyword argument to be variable", "");
 
-            evaluated_kwargs[i] = interpret(kwarg_node.variable.value, caller_scope);
+            evaluated_kwargs[i] = interpret(kwarg_node.variable.value, caller_scope, NULL);
             evaluated_kwargs[i].name = strdup(kwarg_node.variable.name);
         }
 
@@ -102,11 +103,14 @@ Value call_function(
     for (int i = 0; i < args_count; i++)
     {
 
-        Value val = interpret(args[i], caller_scope);
+        Value val = interpret(args[i], caller_scope, NULL);
 
         val.name = strdup(fn->args[i]->variable.name);
 
-        add_variable(caller_scope, &val);
+        if (fn->bound_instance != NULL)
+            add_variable(caller_scope, &val);
+        else
+            set_attribute(fn->bound_instance, val.name, &val);
     }
 
     for (int i = 0; i < kwargs_count; i++)
@@ -116,10 +120,13 @@ Value call_function(
         if (kwarg_node->type != NODE_VARIABLE)
             raise_error("Expected keyword argument to be variable", "");
 
-        Value val = interpret(kwarg_node->variable.value, caller_scope);
+        Value val = interpret(kwarg_node->variable.value, caller_scope, NULL);
 
         val.name = strdup(kwarg_node->variable.name);
-        add_variable(caller_scope, &val);
+        if (fn->bound_instance != NULL)
+            add_variable(caller_scope, &val);
+        else
+            set_attribute(fn->bound_instance, val.name, &val);
     }
 
     // set default values
@@ -139,10 +146,12 @@ Value call_function(
         if (given)
             continue;
 
-        Value val = interpret(fn->kwargs[i]->variable.value, caller_scope);
+        Value val = interpret(fn->kwargs[i]->variable.value, caller_scope, NULL);
         val.name = strdup(def_arg_name);
-
-        add_variable(caller_scope, &val);
+        if (fn->bound_instance != NULL)
+            add_variable(caller_scope, &val);
+        else
+            set_attribute(fn->bound_instance, val.name, &val);
     }
 
     Value last = {0};
@@ -151,15 +160,18 @@ Value call_function(
     for (int i = 0; i < fn->block->count; i++)
     {
         Node *stmt = fn->block->statements[i];
+
         if (stmt->type == NODE_RETURN)
         {
-            Value return_val = interpret(stmt->node_return.expression, caller_scope);
+            Value return_val = interpret(stmt->node_return.expression, caller_scope, NULL);
             type_check(return_val, fn->return_type);
             return return_val;
         }
 
-        last = interpret(stmt, caller_scope);
+        last = interpret(stmt, caller_scope, fn->bound_instance);
     }
+    if (fn->bound_instance != NULL)
+        last.bound_instance = fn->bound_instance;
 
     return last;
 }

@@ -21,8 +21,8 @@ class car
 
 int a = 1
 obj c = car("Ferrari", 2)
-!:c.add_speed()
-!:c.info()
+c.add_speed()
+c.info()
 
 !:obj d = car("Maserati", 3)
 !:d.info()

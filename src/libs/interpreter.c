@@ -6,7 +6,7 @@
 #include "value.h"
 #include "utils.h"
 
-Value interpret(Node *node, Scope *scope)
+Value interpret(Node *node, Scope *scope, Value *this)
 {
     Value result;
     result.type = VALUE_NULL;
@@ -52,25 +52,66 @@ Value interpret(Node *node, Scope *scope)
         if (node->binary_op.token->type == TK_DOT)
         {
 
-            Value left = interpret(node->binary_op.left, scope);
+            Value left = interpret(node->binary_op.left, scope, this);
 
-            char *method_name = node->binary_op.right->identifier.value;
+            if (node->binary_op.right->type == NODE_IDENTIFIER)
+            {
 
-            if (left.type != VALUE_OBJ)
-                raise_error("Left-hand side of '.' must be an object", "");
+                char *method_name = strdup(node->binary_op.right->identifier.value);
+                ValueObject *obj = NULL;
 
-            ValueFunction *method = find_method(left.obj_val, method_name);
-            if (!method)
-                raise_error("Method not found: %s", method_name);
-            Value v;
-            v.type = VALUE_FUNCTION;
-            v.func_val = method;
-            v.bound_instance = &left;
-            return v;
+                if (left.type == VALUE_OBJ)
+                {
+
+                    obj = left.obj_val;
+                    ValueFunction *method = find_method(obj, method_name);
+                    if (!method)
+                        raise_error("Method not found: %s", method_name);
+
+                    Value v;
+                    v.type = VALUE_FUNCTION;
+                    v.func_val = method;
+
+                    Value *bound = malloc(sizeof(Value));
+                    *bound = left;
+                    v.bound_instance = bound;
+
+                    return v;
+                }
+                else if (left.type == VALUE_THIS)
+                {
+
+                    char *attr_name = strdup(node->binary_op.right->identifier.value);
+                    Value *attribute = get_attribute(&left, attr_name);
+
+                    return *attribute;
+                }
+            }
+            else if (node->binary_op.right->type == NODE_FUNCTION_CALL)
+            {
+
+                char *method_name = node->binary_op.right->func_call.name;
+
+                ValueObject *obj = NULL;
+                if (left.type == VALUE_OBJ)
+                    obj = left.obj_val;
+                else if (left.type == VALUE_THIS)
+                    obj = left.bound_instance->obj_val;
+                else
+                    raise_error("Left-hand side of '.' must be object or this", "");
+
+                ValueFunction *method = find_method(obj, method_name);
+                if (!method)
+                    raise_error("Method not found: %s", method_name);
+
+                Value result = call_function(method, method->args, method->args_count, method->kwargs, method->kwargs_count, scope);
+
+                return result;
+            }
         }
 
-        Value left = interpret(node->binary_op.left, scope);
-        Value right = interpret(node->binary_op.right, scope);
+        Value left = interpret(node->binary_op.left, scope, this);
+        Value right = interpret(node->binary_op.right, scope, this);
 
         int is_float = (left.type == VALUE_FLOAT || right.type == VALUE_FLOAT);
         int assignment = node->binary_op.token->type == TK_ASSIGN;
@@ -221,14 +262,14 @@ Value interpret(Node *node, Scope *scope)
     }
     case NODE_IF:
     {
-        Value condition = interpret(node->node_if.condition, scope);
+        Value condition = interpret(node->node_if.condition, scope, this);
         if (condition.bool_val == true)
         {
             Scope *locals = init_scope(scope);
 
             for (int i = 0; i < node->node_if.if_block->count; i++)
             {
-                result = interpret(node->node_if.if_block->statements[i], locals);
+                result = interpret(node->node_if.if_block->statements[i], locals, this);
             }
         }
         else
@@ -239,7 +280,7 @@ Value interpret(Node *node, Scope *scope)
 
                 for (int i = 0; i < node->node_if.else_block->count; i++)
                 {
-                    result = interpret(node->node_if.else_block->statements[i], locals);
+                    result = interpret(node->node_if.else_block->statements[i], locals, this);
                 }
             }
         }
@@ -247,18 +288,18 @@ Value interpret(Node *node, Scope *scope)
     }
     case NODE_WHILE:
     {
-        Value condition = interpret(node->node_while.condition, scope);
+        Value condition = interpret(node->node_while.condition, scope, this);
         while (condition.bool_val != true)
         {
             for (int i = 0; i < node->node_while.if_block->count; i++)
             {
-                result = interpret(node->node_while.if_block->statements[i], scope);
+                result = interpret(node->node_while.if_block->statements[i], scope, this);
                 if (result.type == VALUE_CONTROL_BREAK)
                     goto end_while;
                 else if (result.type == VALUE_CONTROL_CONTINUE)
                     break;
             }
-            condition = interpret(node->node_while.condition, scope);
+            condition = interpret(node->node_while.condition, scope, this);
         }
     end_while:
         return result;
@@ -277,7 +318,7 @@ Value interpret(Node *node, Scope *scope)
         add_variable(locals, iterator);
 
         int length = 0;
-        Value iterable = interpret(node->node_for.iterable, scope);
+        Value iterable = interpret(node->node_for.iterable, scope, this);
 
         Scope *found_scope = NULL;
         int index = get_variable(locals, iter_name, &found_scope);
@@ -301,7 +342,7 @@ Value interpret(Node *node, Scope *scope)
 
                 for (int j = 0; j < node->node_for.for_block->count; j++)
                 {
-                    result = interpret(node->node_for.for_block->statements[j], locals);
+                    result = interpret(node->node_for.for_block->statements[j], locals, this);
                     if (result.type == VALUE_CONTROL_BREAK)
                         goto end_for;
                     else if (result.type == VALUE_CONTROL_CONTINUE)
@@ -326,7 +367,7 @@ Value interpret(Node *node, Scope *scope)
 
                 for (int j = 0; j < node->node_for.for_block->count; j++)
                 {
-                    result = interpret(node->node_for.for_block->statements[j], locals);
+                    result = interpret(node->node_for.for_block->statements[j], locals, this);
 
                     if (result.type == VALUE_CONTROL_BREAK)
                         goto end_for;
@@ -357,7 +398,7 @@ Value interpret(Node *node, Scope *scope)
         for (int i = 0; i < len; i++)
         {
             Value *val = malloc(sizeof(Value));
-            *val = interpret(node->array.elements[i], scope);
+            *val = interpret(node->array.elements[i], scope, this);
             result.array_val.elements[i] = val;
         }
         return result;
@@ -393,8 +434,22 @@ Value interpret(Node *node, Scope *scope)
         else if (callee->type == VALUE_CLASS)
         {
 
-            Value instance = create_instance(callee->obj_val);
+            Value instance = create_instance(callee->obj_val, scope);
+
             instance.type = VALUE_OBJ;
+            ValueFunction *method = instance.obj_val->methods[0];
+
+            if (strcmp(method->name, instance.obj_val->name) != 0)
+                raise_error("Constructor method is missing", "");
+
+            method->bound_instance = &instance;
+
+            call_function(method,
+                          node->func_call.args,
+                          node->func_call.args_count,
+                          node->func_call.kwargs,
+                          node->func_call.kwargs_count,
+                          scope);
 
             return instance;
         }
@@ -440,6 +495,10 @@ Value interpret(Node *node, Scope *scope)
                 result.array_val.generic_type = strdup(var.array_val.generic_type);
 
             break;
+        case VALUE_OBJ:
+            result.type = VALUE_OBJ;
+            result.obj_val = var.obj_val;
+            break;
         case VALUE_NULL:
         default:
             result.type = VALUE_NULL;
@@ -461,7 +520,7 @@ Value interpret(Node *node, Scope *scope)
         if (!node->variable.name)
             raise_error("Variable Name not assigned", "");
         var->name = strdup(node->variable.name);
-        Value right = interpret(node->variable.value, scope);
+        Value right = interpret(node->variable.value, scope, this);
 
         if (strcmp(node->variable.type, "int") == 0)
         {
@@ -496,12 +555,12 @@ Value interpret(Node *node, Scope *scope)
         }
         else if (strcmp(node->variable.type, "obj") == 0)
         {
+
             var->obj_val = right.obj_val;
             var->type = VALUE_OBJ;
         }
 
         add_variable(scope, var);
-
         return result;
     }
     case NODE_CLASS_DEF:
@@ -530,7 +589,7 @@ Value interpret(Node *node, Scope *scope)
 
         for (int i = 0; i < method_count; i++)
         {
-            Value class_method = interpret(node->NODE_CLASS_DEF.methods->statements[i], scope);
+            Value class_method = interpret(node->NODE_CLASS_DEF.methods->statements[i], scope, this);
 
             if (class_method.type != VALUE_FUNCTION || class_method.func_val == NULL)
                 raise_error("Method is not a function", "");
@@ -566,7 +625,7 @@ Value interpret(Node *node, Scope *scope)
     }
     case NODE_RETURN:
     {
-        result = interpret(node, scope);
+        result = interpret(node, scope, this);
         result.type = VALUE_RETURN;
         return result;
     }
@@ -589,6 +648,11 @@ Value interpret(Node *node, Scope *scope)
     case NODE_CONTINUE:
         result.type = VALUE_CONTROL_CONTINUE;
         return result;
+    case NODE_THIS:
+        result.type = VALUE_THIS;
+        result.bound_instance = this;
+        return result;
+
     default:
         printf("Node Type %d\n", node->type);
         raise_error("Error: unsupported node type", "");
@@ -597,54 +661,56 @@ Value interpret(Node *node, Scope *scope)
     return result;
 }
 
-void print_value(Value v)
+void print_value(Value *v)
 {
-    if (v.type == VALUE_NULL)
+    if (v->type == VALUE_NULL)
     {
         printf("<null>\n");
         return;
     }
 
-    switch (v.type)
+    switch (v->type)
     {
     case VALUE_INT:
-        printf("%d\n", v.int_val);
+        printf("%d\n", v->int_val);
         break;
     case VALUE_FLOAT:
-        printf("%f\n", v.float_val);
+        printf("%f\n", v->float_val);
         break;
     case VALUE_BOOL:
-        printf("%s\n", v.bool_val ? "true" : "false");
+        printf("%s\n", v->bool_val ? "true" : "false");
         break;
     case VALUE_STRING:
-        printf("%s\n", v.str_val);
+        printf("%s\n", v->str_val);
         break;
     case VALUE_ARRAY:
         printf("[");
-        for (int i = 0; i < v.array_val.length; i++)
+        for (int i = 0; i < v->array_val.length; i++)
         {
-            print_value(*v.array_val.elements[i]);
-            if (i < v.array_val.length - 1)
+            print_value(v->array_val.elements[i]);
+            if (i < v->array_val.length - 1)
                 printf(", ");
         }
         printf("]\n");
         break;
     case VALUE_FUNCTION:
     {
-        printf("Function <%s>\n", v.name);
+        printf("Function <%s>\n", v->name);
         break;
     }
     case VALUE_CLASS:
     {
-        printf("Class <%s>\n", v.name);
+        printf("Class <%s>\n", v->name);
         break;
     }
     case VALUE_OBJ:
     {
-        printf("Object <%s>\n", v.name);
+        printf("Object <%s>\n", v->name);
         break;
     }
+    case VALUE_THIS:
+        printf("Instance <%s>\n", v->bound_instance->name);
     default:
-        printf("<unknown value> \"%s\"\n", v.name);
+        printf("<unknown value> \"%s\"\n", v->name);
     }
 }

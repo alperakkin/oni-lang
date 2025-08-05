@@ -127,7 +127,7 @@ void add_variable(Scope *scope, Value *var)
             else if (attr->type == VALUE_OBJ || attr->type == VALUE_CLASS)
             {
 
-                *copied_attr = copy_value(attr);
+                *copied_attr = copy_value(attr, scope);
             }
 
             copy->attrs[i] = copied_attr;
@@ -239,7 +239,7 @@ void print_scope(Scope *scope, char *name)
         else if (var.type == VALUE_OBJ)
         {
             printf("    %s (object): ", var.name);
-            printf("<%s>,\n", var.name);
+            printf("<%s>,\n", var.obj_val->name);
         }
         else if (var.type == VALUE_NULL)
         {
@@ -250,7 +250,7 @@ void print_scope(Scope *scope, char *name)
     printf("}\n");
 }
 
-Value copy_value(Value *original)
+Value copy_value(Value *original, Scope *scope)
 {
     Value copy;
     copy.type = original->type;
@@ -275,7 +275,7 @@ Value copy_value(Value *original)
         break;
     case VALUE_OBJ:
     case VALUE_CLASS:
-        copy = create_instance(original);
+        copy = create_instance(original, scope);
         break;
     case VALUE_ARRAY:
         copy.array_val.length = original->array_val.length;
@@ -285,7 +285,7 @@ Value copy_value(Value *original)
         for (int i = 0; i < original->array_val.length; i++)
         {
             Value *element = malloc(sizeof(Value));
-            *element = copy_value(original->array_val.elements[i]);
+            *element = copy_value(original->array_val.elements[i], scope);
             copy.array_val.elements[i] = element;
         }
         break;
@@ -297,7 +297,7 @@ Value copy_value(Value *original)
     return copy;
 }
 
-Value create_instance(ValueObject *class)
+Value create_instance(ValueObject *class, Scope *scope)
 {
 
     Value *obj = malloc(sizeof(Value));
@@ -309,14 +309,12 @@ Value create_instance(ValueObject *class)
     for (int i = 0; i < class->attr_count; i++)
     {
         Value *element = malloc(sizeof(Value));
-        *element = copy_value(class->attrs[i]);
+        *element = copy_value(class->attrs[i], scope);
         obj->obj_val->attrs[i] = element;
     }
 
-    char *instance_name = malloc(strlen("instance_") + strlen(class->name) + 32);
-    sprintf(instance_name, "<class object -> %s>", class->name);
-    obj->name = instance_name;
-    obj->obj_val->name = instance_name;
+    obj->name = strdup(class->name);
+    obj->obj_val->name = strdup(class->name);
 
     obj->obj_val->method_count = class->method_count;
     obj->obj_val->methods = malloc(sizeof(ValueFunction *) * obj->obj_val->method_count);
@@ -336,4 +334,41 @@ ValueFunction *find_method(ValueObject *class, const char *method_name)
             return class->methods[i];
     }
     return NULL;
+}
+
+Value *get_attribute(Value *obj, char *name)
+{
+    for (int i = 0; i < obj->bound_instance->obj_val->attr_count; i++)
+    {
+        if (strcmp(obj->bound_instance->obj_val->attrs[i]->name, name) == 0)
+            return obj->bound_instance->obj_val->attrs[i];
+    }
+    raise_error("Attribute not found:", name);
+    return NULL;
+}
+
+void set_attribute(Value *obj, char *name, Value *val)
+{
+    ValueObject *object = obj->bound_instance;
+    for (int i = 0; i < object->attr_count; i++)
+    {
+        if (strcmp(object->attrs[i]->name, name) == 0)
+        {
+            *(object->attrs[i]) = *val;
+            return;
+        }
+    }
+
+    if (object->attr_count >= object->attr_capacity)
+    {
+        int new_capacity = object->attr_capacity == 0 ? 4 : object->attr_capacity * 2;
+        object->attrs = realloc(object->attrs, sizeof(Value *) * new_capacity);
+        object->attr_capacity = new_capacity;
+    }
+
+    Value *new_attr = malloc(sizeof(Value));
+    *new_attr = *val;
+    new_attr->name = strdup(name);
+
+    object->attrs[object->attr_count++] = new_attr;
 }
