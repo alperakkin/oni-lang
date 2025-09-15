@@ -107,7 +107,7 @@ Value call_function(
 
         val.name = strdup(fn->args[i]->variable.name);
 
-        if (fn->bound_instance != NULL)
+        if (fn->bound_instance == NULL)
             add_variable(caller_scope, &val);
         else
             set_attribute(fn->bound_instance, val.name, &val);
@@ -123,7 +123,7 @@ Value call_function(
         Value val = interpret(kwarg_node->variable.value, caller_scope, NULL);
 
         val.name = strdup(kwarg_node->variable.name);
-        if (fn->bound_instance != NULL)
+        if (fn->bound_instance == NULL)
             add_variable(caller_scope, &val);
         else
             set_attribute(fn->bound_instance, val.name, &val);
@@ -148,7 +148,7 @@ Value call_function(
 
         Value val = interpret(fn->kwargs[i]->variable.value, caller_scope, NULL);
         val.name = strdup(def_arg_name);
-        if (fn->bound_instance != NULL)
+        if (fn->bound_instance == NULL)
             add_variable(caller_scope, &val);
         else
             set_attribute(fn->bound_instance, val.name, &val);
